@@ -1,7 +1,3 @@
-      // ****************************************************************
-      // QUOTECOMP - Quote Comparison (RPGLE equivalent of QUOTECOMP.cbl)
-      // Compares selected quotes and identifies best options
-      // ****************************************************************
       Ctl-Opt DftActGrp(*No) ActGrp(*Caller);
 
       // Display file for screen (replaces BMS QUOTECOMP/COMPMAP)
@@ -216,3 +212,4 @@
         COMPSTSO = 'COMPARING ' + %Char(wsCompareCount) +
                    ' QUOTES - ANALYSIS COMPLETE';
       End-Proc SendMap;
+

@@ -51,8 +51,6 @@
         CompareFlag      Char(1);
       End-Ds;
 
-      // Submission record instance
-      Dcl-Ds subRec LikeDs(SubmissionRecord);
 
       // Screen field variables (from display file)
       // Output fields - Quote 1
@@ -348,4 +346,5 @@
                     ' SELECTED FOR COMPARISON: ' + %Char(wsCompareCount);
         DASHSTS2O = statusMsg;
       End-Proc SendMap;
+
 

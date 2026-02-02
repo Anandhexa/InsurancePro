@@ -30,10 +30,6 @@ dcl-ds Inds;
    pf24    ind pos(24);
 end-ds;
 
-/*------------------------------------------------------------------*/
-/* Data Structures                                                  */
-/*------------------------------------------------------------------*/
-dcl-ds SubmRec likerec(AXASUBM:*all);
 
 /*------------------------------------------------------------------*/
 /* Parameters (COMMAREA equivalent)                                 */
@@ -202,3 +198,4 @@ dcl-proc loadScreen;
    endif;
 
 end-proc;
+

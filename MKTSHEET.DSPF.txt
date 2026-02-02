@@ -1,0 +1,40 @@
+      * MKTSHEET - MARKET SHEET VIEW Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R MKTMAP                    CA03(03)
+A                                      CF12(12)
+A                                      2 30'MARKET SHEET VIEW'
+A                                      DSPATR(HI)
+A                                      4  2'============================================================================'
+A                                      5  2'RFQ ID:'
+A            RFQID         10A  O  5 11
+A                                      6  2'SUBMISSION ID:'
+A            SUBMID        10A  O  6 18
+A                                      7  2'RFQ STATUS:'
+A            RFQSTS        20A  O  7 14
+A                                      DSPATR(HI)
+A                                      8  2'DISTRIBUTION METHOD:'
+A            DISTMETH      10A  O  8 21
+A                                     10  2'------------------------------------------------------------------------------'
+A                                     11 25'RFQ SUBMISSION DETAILS'
+A                                      DSPATR(HI)
+A                                     12  2'------------------------------------------------------------------------------'
+A                                     13  2'CARRIER NAME'
+A                                     13 20'API STATUS'
+A                                     13 40'SENT DATE'
+A                                     13 60'RESPONSE STATUS'
+A                                     14  2'------------------------------------------------------------------------------'
+A            CARRIER1      15A  O 15  2
+A            APISTAT1      10A  O 15 20
+A            SENTDT        10A  O 15 40
+A            RESPSTAT1     15A  O 15 60
+A            CARRIER2      15A  O 16  2
+A            APISTAT2      10A  O 16 20
+A            SENTDT2       10A  O 16 40
+A            RESPSTAT2     15A  O 16 60
+A                                     18  2'------------------------------------------------------------------------------'
+A                                     19 15'RFQ SUCCESSFULLY SUBMITTED VIA API'
+A                                      DSPATR(HI)
+A                                     20 20'AWAITING CARRIER RESPONSES'
+A                                     21  2'------------------------------------------------------------------------------'
+A                                     22  2'PF3=BACK PF12=REFRESH'

@@ -1,0 +1,45 @@
+      * DOCUPLOAD - CLIENT DOCUMENT UPLOAD Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R DOCMAP                    CF02(02)
+A                                      CF04(04)
+A                                      CA03(03)
+A                                      CF12(12)
+A                                      2 20'CLIENT DOCUMENT UPLOAD'
+A                                      DSPATR(HI)
+A                                      4  2'============================================================================'
+A                                      5  2'CLIENT ID:'
+A            CLIENTID       8A  O  5 15
+A                                      6  2'SUBMISSION ID:'
+A            SUBMID        10A  O  6 18
+A                                      8  2'DOCUMENT TYPE:'
+A            DOCTYPE       20A  B  8 18
+A                                      DSPATR(PC)
+A                                      9  2'(QUOTE/BINDER/POLICY/ENDORSEMENT/RENEWAL)'
+A                                     11  2'DOCUMENT NAME:'
+A            DOCNAME       50A  B 11 18
+A                                     13  2'FILE PATH:'
+A            FILEPATH      60A  B 13 13
+A                                     15  2'============================================================================'
+A                                     16  2'DOCUMENT UPLOAD INTERFACE'
+A                                      DSPATR(HI)
+A                                     17  2'------------------------------------------------------------------------------'
+A                                     18  2'CLIP'
+A                                     18  8'DOCUMENT NAME'
+A                                     18 25'TYPE'
+A                                     18 37'STATUS'
+A                                     18 50'UPLOAD DATE'
+A                                     18 67'SIZE'
+A                                     19  2'------------------------------------------------------------------------------'
+A            CLIP1           3A  B 20  2
+A                                      DSPATR(PC)
+A            DOC1           15A  O 20  8
+A            TYPE1          10A  O 20 25
+A            STAT1          10A  O 20 37
+A            DATE1          10A  O 20 50
+A            SIZE1           8A  O 20 67
+A            META1           1A  B 20 76
+A                                      CHECK(AB)
+A            UPLOADSTS     50A  O 21  2
+A                                     21  2'ENTER M IN CLIP COLUMN FOR METADATA UPLOAD'
+A                                     22  2'ENTER=UPLOAD PF2=DELETE DOCS PF4=METADATA PF3=BACK PF12=REFRESH'

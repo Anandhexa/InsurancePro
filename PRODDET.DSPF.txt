@@ -1,0 +1,32 @@
+      * PRODDET - PRODUCT DETAILS Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R PRODMAP2                 CF02(02)
+A                                      CA03(03)
+A                                      CF05(05)
+A                                      CF12(12)
+A                                      2 30'PRODUCT DETAILS'
+A                                      DSPATR(HI)
+A                                      4  2'PRODUCT NAME:'
+A            PRODNM        30A  O  4 16
+A                                      6 25'SUBMISSIONS'
+A                                      DSPATR(HI)
+A                                      8  2'PRODUCT NAME'
+A                                      8 15'SUBMISSION DATE'
+A                                      8 31'VALID UNTIL'
+A                                      8 47'BROKER REF'
+A                                      9  2'------------------------------------------------------------------------------'
+A            PRODNM1       12A  O 10  2
+A            SUBMDT1       15A  O 10 15
+A            VALID1        15A  O 10 31
+A            BROKREF1       15A  O 10 47
+A            PRODNM2       12A  O 11  2
+A            SUBMDT2       15A  O 11 15
+A            VALID2        15A  O 11 31
+A            BROKREF2       15A  O 11 47
+A            PRODNM3       12A  O 12  2
+A            SUBMDT3       15A  O 12 15
+A            VALID3        15A  O 12 31
+A            BROKREF3       15A  O 12 47
+A            NOSUBM        30A  O 14 25
+A                                     22  2'PF2=NEW SUBMISSION PF3=EXIT PF5=GENERATE DOC PF12=REFRESH'

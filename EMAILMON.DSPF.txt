@@ -1,0 +1,35 @@
+      * EMAILMON - EMAIL QUOTE EXTRACTION MONITOR Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R EMAILMAP                  CF02(02)
+A                                      CA03(03)
+A                                      CF12(12)
+A                                      2 20'EMAIL QUOTE EXTRACTION MONITOR'
+A                                      DSPATR(HI)
+A                                      4  2'============================================================================'
+A                                      5  2'EMAIL FROM'
+A                                      5 20'RFQ ID'
+A                                      5 38'CARRIER'
+A                                      5 56'STATUS'
+A                                      6  2'------------------------------------------------------------------------------'
+A            EMAILFROM1    15A  O  7  2
+A            RFQID1        10A  O  7 20
+A            CARRIER1      15A  O  7 38
+A            STATUS1       15A  O  7 56
+A            EMAILFROM2    15A  O  8  2
+A            RFQID2        10A  O  8 20
+A            CARRIER2      15A  O  8 38
+A            STATUS2       15A  O  8 56
+A            EMAILFROM3    15A  O  9  2
+A            RFQID3        10A  O  9 20
+A            CARRIER3      15A  O  9 38
+A            STATUS3       15A  O  9 56
+A                                     11  2'------------------------------------------------------------------------------'
+A                                     12  2'EXTRACTED QUOTE ATTRIBUTES:'
+A                                     13  2'QUOTE ID, RFQ ID, CARRIER, AMOUNT, PREMIUM, DEDUCTIBLE'
+A                                     14  2'COVERAGE LIMIT, QUOTE DATE, VALID UNTIL, TERMS'
+A                                     16  2'============================================================================'
+A            MONSTS        50A  O 17  2
+A                                     19  2'QUOTES AUTOMATICALLY EXTRACTED FROM UWB EMAILS'
+A                                     20  2'AND STORED IN BWB QUOTE DASHBOARD'
+A                                     22  2'PF2=EXTRACT NOW PF3=BACK PF12=REFRESH'

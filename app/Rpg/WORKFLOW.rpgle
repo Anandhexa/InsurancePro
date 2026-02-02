@@ -1,4 +1,3 @@
-<<<<<<<< HEAD:app/Rpg/WORKFLOW.rpgle
 **free
 ctl-opt dftactgrp(*no) actgrp(*caller);
 

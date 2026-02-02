@@ -1,0 +1,196 @@
+**FREE
+ctl-opt dftactgrp(*no)
+        actgrp(*caller)
+        option(*srcstmt:*nodebugio);
+
+/*----------------------------------------------------------------*/
+/* Files                                                          */
+/*----------------------------------------------------------------*/
+dcl-f AXASUBM   usage(*update) keyed;
+dcl-f AXAPROD   usage(*input)  keyed;
+dcl-f AXAPLCMT  usage(*update) keyed;
+dcl-f EMAILMAP  workstn;
+
+/*----------------------------------------------------------------*/
+/* Copy books (externally described DS)                            */
+/*----------------------------------------------------------------*/
+ /copy EMAIL
+ /copy SUBMISSN
+ /copy PRODUCT
+ /copy PLACEMENT
+
+/*----------------------------------------------------------------*/
+/* Program parameter (DFHCOMMAREA)                                 */
+/*----------------------------------------------------------------*/
+dcl-pi *n;
+   pCommArea char(100);
+end-pi;
+
+/*----------------------------------------------------------------*/
+/* Working storage                                                */
+/*----------------------------------------------------------------*/
+dcl-s wsSubmissionKey char(10);
+dcl-s wsEmailCount    int(5) inz(0);
+dcl-s wsSuccessCount  int(5) inz(0);
+dcl-s wsIndex         int(5);
+
+dcl-s wsBrokerEmail varchar(50)
+     inz('RGARCIA@AXAINSURANCE.COM');
+
+/*----------------------------------------------------------------*/
+/* Main logic                                                      */
+/*----------------------------------------------------------------*/
+wsSubmissionKey = %subst(pCommArea:1:10);
+
+loadCarriers();
+readSubmissionData();
+sendMap();
+
+return;
+
+/*----------------------------------------------------------------*/
+/* Load carriers (static list)                                    */
+/*----------------------------------------------------------------*/
+dcl-proc loadCarriers;
+
+   Carrier_Org_Name(1)  = 'LLOYD''S SYNDICATE 123';
+   Carrier_Org_Type(1)  = 'INSURANCE MARKET';
+   Carrier_Email_Addr(1)= 'hexawaretechnologiesincdemo1@service-now.com';
+
+   Carrier_Org_Name(2)  = 'ZURICH COMMERCIAL';
+   Carrier_Org_Type(2)  = 'DIRECT INSURER';
+   Carrier_Email_Addr(2)= 'hexawaretechnologiesincdemo1@service-now.com';
+
+   Carrier_Org_Name(3)  = 'ALLIANZ UNDERWRITERS';
+   Carrier_Org_Type(3)  = 'REINSURER';
+   Carrier_Email_Addr(3)= 'hexawaretechnologiesincdemo1@service-now.com';
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Read submission / product / placement                          */
+/*----------------------------------------------------------------*/
+dcl-proc readSubmissionData;
+
+   chain wsSubmissionKey AXASUBM;
+
+   chain Product_Id AXAPROD;
+
+   chain Placement_Id AXAPLCMT;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* ENTER key – Send email submission                               */
+/*----------------------------------------------------------------*/
+dcl-proc sendEmailSubmission;
+
+   exfmt EMAILMAP;
+
+   processSelectedCarriers();
+   updateStatus();
+   gotoQuoteResponses();
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Process selected carriers                                      */
+/*----------------------------------------------------------------*/
+dcl-proc processSelectedCarriers;
+
+   if Sel1I = 'X';
+      wsIndex = 1;
+      sendEmail(wsIndex);
+   endif;
+
+   if Sel2I = 'X';
+      wsIndex = 2;
+      sendEmail(wsIndex);
+   endif;
+
+   if Sel3I = 'X';
+      wsIndex = 3;
+      sendEmail(wsIndex);
+   endif;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send email (PRINT equivalent)                                  */
+/*----------------------------------------------------------------*/
+dcl-proc sendEmail;
+   dcl-pi *n;
+      idx int(5);
+   end-pi;
+
+   Email_To = Carrier_Email_Addr(idx);
+
+   Email_Subject =
+      'SUBM:' + Submission_Id;
+
+   Email_Body =
+      'Source of Submission: Email' + x'0A' +
+      'Insured Name: ' + Placement_Name + x'0A' +
+      'Broker Email ID: ' + wsBrokerEmail + x'0A' +
+      'Product: ' + Product_Name + x'0A' +
+      'Transaction: ' + Product_Type + x'0A' +
+      'Inception Date: ' + Submission_Date + x'0A' +
+      'Expiration Date: ' + Valid_Until_Date + x'0A' +
+      'Program limit: ' + %char(Coverage_Limit);
+
+   /* Simulated CICS SEND TEXT PRINT */
+   dsply Email_Body;
+
+   wsEmailCount   += 1;
+   wsSuccessCount += 1;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Update submission & placement status                            */
+/*----------------------------------------------------------------*/
+dcl-proc updateStatus;
+
+   Submission_Status = 'SUBMISSION-SENT';
+   update AXASUBM;
+
+   Placement_Status = 'WITH-MARKET';
+   update AXAPLCMT;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* XCTL to Quote Responses                                        */
+/*----------------------------------------------------------------*/
+dcl-proc gotoQuoteResponses;
+
+   %subst(pCommArea:1:10) = Submission_Id;
+   callp QUOTERESP(pCommArea);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send map                                                       */
+/*----------------------------------------------------------------*/
+dcl-proc sendMap;
+
+   SubmIdO  = Submission_Id;
+   InsNameO = Placement_Name;
+   ProdNmO  = Product_Name;
+
+   EmailStsO =
+      'READY TO SEND TO ' + %char(wsEmailCount) + ' CARRIERS';
+
+   exfmt EMAILMAP;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF3 – Return to submission                                     */
+/*----------------------------------------------------------------*/
+dcl-proc returnSubmission;
+
+   %subst(pCommArea:1:10) = Submission_Id;
+   callp SUBMISSN(pCommArea);
+
+end-proc;

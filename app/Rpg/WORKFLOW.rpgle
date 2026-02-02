@@ -255,5 +255,3 @@ dcl-proc calculateDueDate;
    SubmissionRec.SLA_DUE_DATE = DueDate;
 
 end-proc;
-
->>>>>>>> ea71ab6063836d41f864c1ff8b3db0bddfcd69a4:WORKFLOW.rpgle

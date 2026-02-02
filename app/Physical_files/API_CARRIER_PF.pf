@@ -1,0 +1,12 @@
+     A*****************************************************************
+     A* FILE : API_CARRIER_PF
+     A* DESC : API carrier configuration (flattened OCCURS)
+     A*****************************************************************
+     A          R APICARR
+     A
+     A            API_CARR1_NAME       30A
+     A            API_CARR1_TYPE       20A
+     A            API_CARR1_URL       100A
+     A            API_CARR1_TOKEN      50A
+     A            API_CARR1_SEL         1A
+     

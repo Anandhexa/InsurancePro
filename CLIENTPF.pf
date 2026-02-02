@@ -1,7 +1,0 @@
-     A          R CLIENTR
-     A            CLIENTID          8A          TEXT('Client ID')
-     A            CLIENTNAME       30A         TEXT('Client Name')
-     A            CLIENTADDR       50A         TEXT('Client Address')
-     A            CLIENTCITY       20A         TEXT('Client City')
-     A            CLIENTCNTRY      20A         TEXT('Client Country')
-     A            CLIENTPOST       10A         TEXT('Client Postal Code')

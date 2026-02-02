@@ -1,0 +1,24 @@
+     A*****************************************************************
+     A* FILE : POLICY_PF
+     A* DESC : Policy master record
+     A*****************************************************************
+     A          R POLICYR
+     A            POLICY_ID          15A
+     A            POLICY_NUMBER      20A
+     A            SUBMISSION_ID      10A
+     A            QUOTE_ID           10A
+     A            INSURED_NAME       50A
+     A            POLICY_TYPE        20A
+     A            INCEPTION_DATE     10A
+     A            EXPIRY_DATE        10A
+     A            POLICY_LIMIT       17P 2
+     A            DEDUCTIBLE         12P 2
+     A            TOTAL_PREMIUM      14P 2
+     A            COMMISSION_RATE     4P 2
+     A            COMMISSION_AMOUNT  12P 2
+     A            CARRIER_NAME       30A
+     A            BROKER_NAME        30A
+     A            POLICY_STATUS      15A
+     A            RENEWAL_FLAG        1A
+     A            CREATED_DATE       10A
+     A            LAST_MODIFIED      26A

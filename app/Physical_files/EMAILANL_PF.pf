@@ -1,0 +1,12 @@
+     A*****************************************************************
+     A* FILE : EMAILANL_PF
+     A* DESC : Aggregated email analytics
+     A*****************************************************************
+     A          R EMAILANLR
+     A            TOTAL_EMAILS        6P 0
+     A            PROCESSED_EMAILS    6P 0
+     A            FAILED_EMAILS       4P 0
+     A            SUCCESS_RATE        5P 2
+     A            AVG_PROCESSING_TIME 4P 0
+     A            PEAK_VOLUME_HOUR    2P 0
+     A            LAST_UPDATED       26A

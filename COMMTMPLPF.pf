@@ -1,7 +1,0 @@
-     A          R COMMTMPLR
-     A            TEMPLATEID        10A         TEXT('Template ID')
-     A            TEMPLATENAME      50A         TEXT('Template Name')
-     A            TEMPLATETYPE      15A         TEXT('Template Type')
-     A            TEMPLATESUBJ     100A         TEXT('Template Subject')
-     A            TEMPLATEBODY    1000A         TEXT('Template Body')
-     A            TEMPLATESTATUS    10A         TEXT('Template Status')

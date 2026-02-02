@@ -1,0 +1,31 @@
+      * PIPESCR - MY PLACEMENTS PIPELINE Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R PIPEMAP                   CF02(02)
+A                                      CA03(03)
+A                                      CF12(12)
+A                                      2 25'MY PLACEMENTS PIPELINE'
+A                                      DSPATR(HI)
+A                                      4  2'PLACEMENT'
+A                                      4 13'NAME'
+A                                      4 44'STATUS'
+A                                      4 60'PRIORITY'
+A                                      4 70'DUE DATE'
+A                                      5  2'------------------------------------------------------------------------------'
+A            PLCMT1        10A  O  7  2
+A            NAME1         28A  O  7 13
+A            STATUS1        6A  O  7 44
+A            PRIOR1         8A  O  7 60
+A            DUEDT1         8A  O  7 70
+A            PLCMT2        10A  O  8  2
+A            NAME2         28A  O  8 13
+A            STATUS2        6A  O  8 44
+A            PRIOR2         8A  O  8 60
+A            DUEDT2         8A  O  8 70
+A            PLCMT3        10A  O  9  2
+A            NAME3         28A  O  9 13
+A            STATUS3        6A  O  9 44
+A            PRIOR3         8A  O  9 60
+A            DUEDT3         8A  O  9 70
+A            NODATA        30A  O 10 25
+A                                     22  2'PF2=NEW PF3=EXIT PF12=REFRESH'

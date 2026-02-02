@@ -1,0 +1,15 @@
+     A*****************************************************************
+     A* FILE : WORKFLOW_REC_PF
+     A* DESC : Workflow instance / transaction record
+     A*****************************************************************
+     A          R WORKFLOWR
+     A            WORKFLOW_ID        10A
+     A            WORKFLOW_NAME      50A
+     A            CURRENT_STATE      20A
+     A            NEXT_STATE         20A
+     A            WORKFLOW_STATUS    15A
+     A            ASSIGNED_USER      30A
+     A            CREATED_DATE       10A
+     A            DUE_DATE           10A
+     A            PRIORITY_LEVEL     10A
+     A            ESCALATION_FLAG     1A

@@ -1,0 +1,15 @@
+     A*****************************************************************
+     A* FILE : EMAILCFG_PF
+     A* DESC : Email server configuration
+     A*****************************************************************
+     A          R EMAILCFGR
+     A            CONFIG_ID          10A
+     A            EMAIL_SERVER       50A
+     A            SERVER_PORT         5P 0
+     A            SERVER_TYPE        10A
+     A            USERNAME           50A
+     A            PASSWORD           50A
+     A            SSL_FLAG            1A
+     A            TIMEOUT_SECONDS     3P 0
+     A            MAX_CONNECTIONS     2P 0
+     A            CONFIG_STATUS      10A

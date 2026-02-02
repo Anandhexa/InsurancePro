@@ -1,0 +1,10 @@
+     A*****************************************************************
+     A* FILE : EMAILQT_PF
+     A* DESC : Raw email content for quote ingestion
+     A*****************************************************************
+     A          R EMAILQTR
+     A            EMAIL_FROM         50A
+     A            EMAIL_SUBJECT     100A
+     A            EMAIL_BODY       1000A
+     A            ATTACHMENT_NAME    50A
+     A            EXTRACTION_STATUS  20A

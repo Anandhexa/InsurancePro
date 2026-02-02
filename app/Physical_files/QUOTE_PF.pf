@@ -1,0 +1,38 @@
+     A*****************************************************************
+     A* FILE : QUOTE_PF
+     A* DESC : Quote transaction record
+     A*****************************************************************
+     A          R QUOTER
+     A            QUOTE_ID            10A
+     A            RFQ_ID              10A
+     A            SUBMISSION_ID       10A
+     A            CARRIER_NAME        30A
+     A            RESPONSE_STATUS     20A
+     A            ACTION              20A
+     A            QUOTE_DATE          10A
+     A            QUOTE_AMOUNT       14P 2
+     A            QUOTE_STATUS        15A
+     A            DESCRIPTION         50A
+     A            ATTACH_POINT       14P 2
+     A            LIMIT_AMOUNT       17P 2
+     A            TOTAL_PREMIUM      14P 2
+     A            QUOTED_CAPACITY     5P 2
+     A            PREMIUM            14P 2
+     A            QUOTE_EXPIRY_DATE   10A
+     A            UW_SUBMISSION_NUM   15A
+     A            DISTRIBUTION_TYPE   15A
+     A            COMPARE_FLAG         1A
+     A
+     A*---------------------------------------------------------------
+     A* ENHANCED FIELDS
+     A*---------------------------------------------------------------
+     A            BASE_PREMIUM       14P 2
+     A            RISK_PREMIUM       12P 2
+     A            COMMISSION_RATE     4P 2
+     A            COMMISSION_AMOUNT  12P 2
+     A            COMPETITIVENESS    10A
+     A            QUOTE_SCORE         3P 0
+     A            VALIDATION_STATUS  15A
+     A            PRICING_METHOD     15A
+     A            LAST_MODIFIED      26A
+     A            CREATED_BY         30A

@@ -1,0 +1,22 @@
+     A*****************************************************************
+     A* FILE : API_REQUEST_PF
+     A* DESC : Converted from COBOL CPY WS-API-REQUEST
+     A*****************************************************************
+     A          R APIREQR
+     A            WS_SUBMISSION_ID     10A
+     A            WS_PLACEMENT_ID      10A
+     A            WS_PRODUCT_ID        10A
+     A            WS_CLIENT_ID          8A
+     A            WS_BROKER_ID          8A
+     A            WS_CARRIER_ID         8A
+     A            WS_BUSINESS_TYPE     15A
+     A            WS_INCEPTION_DATE    10A
+     A            WS_EXPIRY_DATE       10A
+     A            WS_CURRENCY           3A
+     A            WS_LIMIT_AMOUNT     17P 2
+     A            WS_DEDUCTIBLE_AMT   14P 2
+     A            WS_PREMIUM_AMT      14P 2
+     A            WS_COMMISSION_PCT    5P 2
+     A            WS_STATUS            20A
+     A            WS_CREATED_DATE      10A
+     A            WS_MODIFIED_DATE     10A

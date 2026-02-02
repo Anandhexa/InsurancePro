@@ -1,0 +1,54 @@
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R ANALMAP                   CA03(03)
+A                                      CF01(01)
+A                                      CF02(02)
+A                                      CF03(03)
+A                                      CF12(12)
+A                                      1 25'ANALYTICS AND REPORTING DASHBOARD'
+A                                      DSPATR(HI)
+A                                      3  1'Report Period:'
+A            REPORTPD      10A  B  3 16
+A                                      DSPATR(PC)
+A                                      5  1'PERFORMANCE METRICS'
+A                                      DSPATR(HI)
+A                                      7  1'Total Submissions:'
+A            TOTSUBM        7S 0O  7 20
+A                                      EDTCDE(1)
+A                                      7 30'Total Quotes:'
+A            TOTQUOT        7S 0O  7 44
+A                                      EDTCDE(1)
+A                                      8  1'Total Bindings:'
+A            TOTBIND        7S 0O  8 17
+A                                      EDTCDE(1)
+A                                      8 25'Total Premium:'
+A            TOTPREM       15P 2O  8 41
+A                                      EDTCDE(J)
+A                                      9  1'Conversion Rate:'
+A            CONVRAT        7P 2O  9 18
+A                                      EDTCDE(4)
+A                                      9 25'%'
+A                                      9 30'Top Carrier:'
+A            TOPCAR        20A  O  9 43
+A                                     10  1'Avg Quote Time:'
+A            AVGQTIME       3S 0O 10 19
+A                                      EDTCDE(1)
+A                                     10 23'hours'
+A                                     12  1'KEY PERFORMANCE INDICATORS'
+A                                      DSPATR(HI)
+A                                     14  1'Quote-to-Bind Ratio:'
+A            QTBRAT         7P 2O 14 20
+A                                      EDTCDE(4)
+A                                     14 27'%'
+A                                     14 30'Avg Premium Size:'
+A            AVGPREM       12P 2O 14 49
+A                                      EDTCDE(J)
+A                                     15  1'Market Share:'
+A            MKTSHARE       7P 2O 15 17
+A                                      EDTCDE(4)
+A                                     15 24'%'
+A                                     15 30'Revenue Growth:'
+A            REVGROW        7P 2O 15 46
+A                                      EDTCDE(4)
+A                                     15 53'%'
+A                                     18  1'PF1=Daily PF2=Weekly PF3=Monthly ENTER=Generate PF12=Refresh'

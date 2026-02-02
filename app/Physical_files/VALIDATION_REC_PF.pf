@@ -1,0 +1,14 @@
+     A*****************************************************************
+     A* FILE : VALIDATION_REC_PF
+     A* DESC : Validation rule definition
+     A*****************************************************************
+     A          R VALIDRECR
+     A            VALIDATION_ID      10A
+     A            FIELD_NAME         30A
+     A            VALIDATION_TYPE    15A
+     A            MIN_VALUE          20A
+     A            MAX_VALUE          20A
+     A            REQUIRED_FLAG       1A
+     A            FORMAT_MASK        30A
+     A            ERROR_MESSAGE     100A
+     A            VALIDATION_STATUS  10A

@@ -1,9 +1,0 @@
-PGM
-
-  /* Step 1: Delete and recreate PRODUCT file                          */
-  DLTF FILE(AXAINS/PRODUCT)
-  MONMSG MSGID(CPF2105) EXEC(GOTO CMDLBL(SKIP1))
-  CRTPF FILE(AXAINS/PRODUCT) RCDLEN(104)
-  SKIP1:
-
-ENDPGM

@@ -1,0 +1,14 @@
+     A*****************************************************************
+     A* FILE : EMAILMET_PF
+     A* DESC : Email processing metrics by carrier
+     A*****************************************************************
+     A          R EMAILMETR
+     A            METRIC_ID          10A
+     A            CARRIER_NAME       30A
+     A            EMAIL_COUNT         5P 0
+     A            RESPONSE_COUNT      5P 0
+     A            AVG_RESPONSE_TIME   3P 0
+     A            QUOTE_EXTRACTED     3P 0
+     A            PROCESSING_ERRORS   3P 0
+     A            METRIC_DATE        10A
+     A            METRIC_STATUS      10A

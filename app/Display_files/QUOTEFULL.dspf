@@ -1,0 +1,55 @@
+A* Comprehensive Quote Dashboard
+A*--------------------------------------------------------------
+A          R QUOTE_SCREEN
+A            CMP1           1A  B  5  2
+A            RFQID1         6A  B  5  6
+A            CARRIER1       8A  B  5  13
+A            DESC1          11A B  5  22
+A            ATTACH1        6A  B  5  34
+A            LIMIT1         5A  B  5  41
+A            PREM1          7A  B  5  47
+A            CAPAC1         8A  B  5  55
+A            EXPIRY1        6A  B  5  64
+A            UWREF1         8A  B  5  71
+A            CMP2           1A  B  6  2
+A            RFQID2         6A  B  6  6
+A            CARRIER2       8A  B  6  13
+A            DESC2          11A B  6  22
+A            ATTACH2        6A  B  6  34
+A            LIMIT2         5A  B  6  41
+A            PREM2          7A  B  6  47
+A            CAPAC2         8A  B  6  55
+A            EXPIRY2        6A  B  6  64
+A            UWREF2         8A  B  6  71
+A            CMP3           1A  B  7  2
+A            RFQID3         6A  B  7  6
+A            CARRIER3       8A  B  7  13
+A            DESC3          11A B  7  22
+A            ATTACH3        6A  B  7  34
+A            LIMIT3         5A  B  7  41
+A            PREM3          7A  B  7  47
+A            CAPAC3         8A  B  7  55
+A            EXPIRY3        6A  B  7  64
+A            UWREF3         8A  B  7  71
+A* Distribution Type Breakdown
+A            APICOUNT       2A  B 12  11
+A            EMAILCNT       2A  B 12  29
+A            WSCNT          2A  B 12  51
+A* Status and instructions
+A            DASHSTS2       50A B 19  2
+A            STATUS_MSG     40A B 15  2
+A            INFO_MSG       60A B 16  2
+A            UW_MSG         50A B 17  2
+A* Command line instructions
+A            CMD_LINE       70A B 22  2
+A* Command Keys (PF keys)
+A            ENTER_KEY      1A  B 22  72
+A            PF2            1A  B 22  73
+A            PF3            1A  B 22  74
+A            PF4            1A  B 22  75
+A            PF12           1A  B 22  76
+A*--------------------------------------------------------------
+A          P QUOTE_PROCESS
+A* Program control variables and database logic (defined later)
+A*--------------------------------------------------------------
+A          E QF0100

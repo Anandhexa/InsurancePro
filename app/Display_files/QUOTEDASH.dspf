@@ -1,0 +1,47 @@
+      * QUOTEDASH - QUOTE RESPONSE DASHBOARD Display File
+A                                      DSPSIZ(24 80 *DS3)
+A                                      INDARA
+A          R QUOTEMP                   CF01(01)
+A                                      CF02(02)
+A                                      CA03(03)
+A                                      CF12(12)
+A                                      2 25'QUOTE RESPONSE DASHBOARD'
+A                                      DSPATR(HI)
+A                                      4  2'============================================================================'
+A                                      5  2'QUOTE ID'
+A                                      5 12'RFQ ID'
+A                                      5 22'CARRIER NAME'
+A                                      5 36'RESPONSE STATUS'
+A                                      5 53'ACTION'
+A                                      5 65'QUOTE DATE'
+A                                      6  2'------------------------------------------------------------------------------'
+A            QUOTEID1       8A  O  7  2
+A            RFQID1         8A  O  7 12
+A            CARRIER1      12A  O  7 22
+A            RESPSTS1      15A  O  7 36
+A            ACTION1       10A  B  7 53
+A                                      DSPATR(PC)
+A            QDATE1        10A  O  7 65
+A            QUOTEID2       8A  O  8  2
+A            RFQID2         8A  O  8 12
+A            CARRIER2      12A  O  8 22
+A            RESPSTS2      15A  O  8 36
+A            ACTION2       10A  B  8 53
+A                                      DSPATR(PC)
+A            QDATE2        10A  O  8 65
+A            QUOTEID3       8A  O  9  2
+A            RFQID3         8A  O  9 12
+A            CARRIER3      12A  O  9 22
+A            RESPSTS3      15A  O  9 36
+A            ACTION3       10A  B  9 53
+A                                      DSPATR(PC)
+A            QDATE3        10A  O  9 65
+A                                     11  2'------------------------------------------------------------------------------'
+A                                     12  2'ACTION OPTIONS:'
+A                                     13  2'D = DECLINE TO QUOTE    U = UPLOAD QUOTE'
+A                                     15  2'RESPONSE STATUS VALUES:'
+A                                     16  2'SUBMISSION-SENT / PENDING FOR REVIEW / QUOTED'
+A                                     18  2'============================================================================'
+A            DASHSTS       50A  O 19  2
+A                                     21  2'PF1=FULL DASHBOARD PF2=EMAIL MONITOR'
+A                                     22  2'ENTER=PROCESS ACTIONS PF3=BACK PF12=REFRESH'

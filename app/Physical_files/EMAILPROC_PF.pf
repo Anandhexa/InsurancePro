@@ -1,0 +1,14 @@
+     A*****************************************************************
+     A* FILE : EMAILPROC_PF
+     A* DESC : Email processing and extraction tracking
+     A*****************************************************************
+     A          R EMAILPROCR
+     A            EMAIL_ID           15A
+     A            FROM_ADDRESS      100A
+     A            TO_ADDRESS        100A
+     A            EMAIL_SUBJECT     200A
+     A            EMAIL_DATE         10A
+     A            EMAIL_TIME          8A
+     A            ATTACHMENT_COUNT    2P 0
+     A            PROCESSING_STATUS  15A
+     A            EXTRACTED_DATA    500A

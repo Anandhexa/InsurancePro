@@ -94,7 +94,6 @@
                SendMap();
 
              other;
-               // Any other key - just refresh
                SendMap();
            endsl;
          enddo;

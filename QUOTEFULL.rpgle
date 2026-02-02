@@ -1,7 +1,3 @@
-      // ****************************************************************
-      // QUOTEFULL - Comprehensive Quote View (RPGLE equivalent)
-      // Converts CICS BMS program to native RPG with display file
-      // ****************************************************************
       Ctl-Opt DftActGrp(*No) ActGrp(*Caller);
 
       // Display file for screen (replaces BMS QUOTEFULL/FULLMAP)
@@ -352,3 +348,4 @@
                     ' SELECTED FOR COMPARISON: ' + %Char(wsCompareCount);
         DASHSTS2O = statusMsg;
       End-Proc SendMap;
+

@@ -15,10 +15,6 @@ dcl-ds Inds;
    refresh     ind pos(12);  // PF12
 end-ds;
 
-/*------------------------------------------------------------------*/
-/* Data Structures                                                  */
-/*------------------------------------------------------------------*/
-dcl-ds GTMRec likerec(AXAGTM:*all);
 
 /*------------------------------------------------------------------*/
 /* Parameters (COMMAREA equivalent)                                 */
@@ -108,3 +104,4 @@ dcl-proc buildUpdatedRequest;
    GTMRec.GTM_STATUS = 'UPDATED';
 
 end-proc;
+

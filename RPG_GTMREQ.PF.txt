@@ -1,0 +1,12 @@
+     A*****************************************************************
+     A* FILE : GTMREQ_PF
+     A* DESC : Go-To-Market request tracking
+     A*****************************************************************
+     A          R GTMREQR
+     A            GTM_RFQ_ID         10A
+     A            GTM_SUBMISSION_ID  10A
+     A            GTM_DISTRIBUTION   15A
+     A            GTM_CARRIER_NAME   30A
+     A            GTM_CARRIER_TYPE   20A
+     A            GTM_STATUS         20A
+     A            GTM_CREATED_DATE  10A

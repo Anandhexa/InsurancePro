@@ -1,0 +1,10 @@
+     A*****************************************************************
+     A* FILE : CAREMAIL_PF
+     A* DESC : Carrier email recipients
+     A*****************************************************************
+     A          R CAREMAILR
+     A            EMAIL_REQ_ID        15A
+     A            CARRIER_ORG_NAME    30A
+     A            CARRIER_ORG_TYPE    20A
+     A            CARRIER_EMAIL_ADDR 50A
+     A            CARRIER_SELECTED    1A

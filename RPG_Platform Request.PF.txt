@@ -1,0 +1,17 @@
+     A*****************************************************************
+     A*  FILE: PLATFORM_REQUEST_PF
+     A*  GENERATED FROM COBOL COPYBOOK: WS-PLATFORM-REQUEST
+     A*****************************************************************
+
+     A          R PLATFORMR
+     A            WS_SUBMISSION_ID     10A
+     A            WS_SOURCE            20A
+     A            WS_INSURED_NAME      30A
+     A            WS_BROKER_EMAIL      50A
+     A            WS_PRODUCT           30A
+     A            WS_TRANSACTION       15A
+     A            WS_INCEPTION_DATE    10A
+     A            WS_EXPIRATION_DATE   10A
+     A            WS_PROGRAM_LIMIT    17P 2
+     A            WS_CARRIER_NAME      30A
+     A            WS_PLATFORM_STATUS  20A

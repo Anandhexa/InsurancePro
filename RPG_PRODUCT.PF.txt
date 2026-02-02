@@ -1,0 +1,13 @@
+     A*****************************************************************
+     A* FILE : PRODUCT_PF
+     A* DESC : Product master record
+     A*****************************************************************
+     A          R PRODUCTR
+     A            PRODUCT_ID          10A
+     A            PLACEMENT_ID        10A
+     A            PRODUCT_NAME        30A
+     A            PRODUCT_TYPE        20A
+     A            COVERAGE_LIMIT     14P 2
+     A            DEDUCTIBLE          12P 2
+     A            PREMIUM             12P 2
+     A            PRODUCT_STATUS      10A

@@ -1,0 +1,10 @@
+     A*****************************************************************
+     A* FILE : RULE_EXEC_RESULT_PF
+     A* DESC : Business rule execution outcome
+     A*****************************************************************
+     A          R RULERESR
+     A            RULE_FIRED_FLAG     1A
+     A            RULE_RESULT        20A
+     A            RULE_MESSAGE      100A
+     A            ACTION_TAKEN       50A
+     A            EXECUTION_TIME     26A

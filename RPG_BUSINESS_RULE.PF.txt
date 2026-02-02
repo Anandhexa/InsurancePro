@@ -1,0 +1,15 @@
+     A*****************************************************************
+     A* FILE : BUSINESS_RULE_PF
+     A* DESC : Business rule definition / configuration
+     A*****************************************************************
+     A          R BUSRULER
+     A            RULE_ID            10A
+     A            RULE_NAME          50A
+     A            RULE_TYPE          20A
+     A            RULE_CATEGORY      15A
+     A            RULE_CONDITION    200A
+     A            RULE_ACTION       200A
+     A            RULE_PRIORITY       2P 0
+     A            RULE_STATUS        10A
+     A            EFFECTIVE_DATE     10A
+     A            EXPIRY_DATE        10A

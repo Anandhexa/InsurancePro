@@ -1,0 +1,11 @@
+     A*****************************************************************
+     A* FILE : RFQ_CARRIER_REQ_PF
+     A* DESC : RFQ carrier request header
+     A*****************************************************************
+     A          R RFQREQR
+     A            RFQ_ID              10A
+     A            SUBMISSION_ID       10A
+     A            CARRIER_ID           8A
+     A            DISTRIBUTION_METHOD 10A
+     A            RFQ_STATUS          20A
+     A            CREATED_DATE        10A

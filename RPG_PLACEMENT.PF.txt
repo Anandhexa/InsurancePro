@@ -1,0 +1,11 @@
+     A*****************************************************************
+     A* FILE : PLACEMENT_PF
+     A* DESC : Placement master record
+     A*****************************************************************
+     A          R PLACEMTR
+     A            PLACEMENT_ID       10A
+     A            PLACEMENT_NAME     30A
+     A            PLACEMENT_STATUS   15A
+     A            PLACEMENT_PRIORITY 10A
+     A            PLACEMENT_DUE_DATE 10A
+     A            PLACEMENT_BROKER    8A

@@ -7,11 +7,6 @@ ctl-opt dftactgrp(*no) actgrp(*caller);
 dcl-f AXASUBM usage(*update) keyed;
 
 /*------------------------------------------------------------------*/
-/* Data Structures                                                   */
-/*------------------------------------------------------------------*/
-dcl-ds SubmissionRec likerec(AXASUBM:*all);
-
-/*------------------------------------------------------------------*/
 /* Parameters (COMMAREA equivalent)                                  */
 /*------------------------------------------------------------------*/
 dcl-pi *n;
@@ -128,3 +123,4 @@ dcl-proc calculateDueDate;
    SubmissionRec.SLA_DUE_DATE = DueDate;
 
 end-proc;
+

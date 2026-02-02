@@ -194,3 +194,4 @@ dcl-proc returnSubmission;
    callp SUBMISSN(pCommArea);
 
 end-proc;
+

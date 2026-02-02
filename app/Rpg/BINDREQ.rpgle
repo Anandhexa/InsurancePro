@@ -304,14 +304,14 @@ SEND_MAP:
 /* NAVIGATION                                                         */
 /*-------------------------------------------------------------------*/
 RETURN_DASHBOARD:
-   exec cics xctl
+   exec xctl
         program('QUOTEFULL')
         commarea(DFHCOMMAREA);
    end-exec;
 
 BINDING_LOGIC:
    DFHCOMMAREA = WS_QuoteID(1);
-   exec cics link
+   exec link
         program('BINDLOGIC')
         commarea(DFHCOMMAREA);
    end-exec;
@@ -321,7 +321,7 @@ BINDING_LOGIC:
 
 COMMUNICATION_MANAGER:
    DFHCOMMAREA = WS_QuoteID(1);
-   exec cics link
+   exec link
         program('BINDCOMM')
         commarea(DFHCOMMAREA);
    end-exec;

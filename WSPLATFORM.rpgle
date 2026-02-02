@@ -87,34 +87,12 @@ dcl-proc LoadWsCarriers;
   WS_CARR_NAME(1) = 'LLOYD''S MARKET PORTAL';
   WS_CARR_TYPE(1) = 'INSURANCE MARKET';
   WS_CARR_PLATFORM(1) = 'WHITESPACE';
-
   WS_CARR_NAME(2) = 'ZURICH TRADING HUB';
   WS_CARR_TYPE(2) = 'DIRECT INSURER';
   WS_CARR_PLATFORM(2) = 'WHITESPACE';
-
   WS_CARR_NAME(3) = 'ALLIANZ MARKETPLACE';
   WS_CARR_TYPE(3) = 'REINSURER';
   WS_CARR_PLATFORM(3) = 'WHITESPACE';
-end-proc;
-
-dcl-proc ReadSubmissionData;
-  exec cics read
-    dataset('AXASUBM')
-    into(SUBMISSION_RECORD)
-    ridfld(WS_SUBMISSION_KEY)
-  end-exec;
-
-  exec cics read
-    dataset('AXAPROD')
-    into(PRODUCT_RECORD)
-    ridfld(SUBMISSION_RECORD.PRODUCT_ID)
-  end-exec;
-
-  exec cics read
-    dataset('AXAPLCMT')
-    into(PLACEMENT_RECORD)
-    ridfld(PRODUCT_RECORD.PLACEMENT_ID)
-  end-exec;
 end-proc;
 
 dcl-proc BuildWsPayload;
@@ -130,147 +108,17 @@ dcl-proc BuildWsPayload;
   WS_PLATFORM_REQUEST.WS_PLATFORM_STATUS = 'SUBMISSION-SENT';
 end-proc;
 
-dcl-proc SendToWhitespace;
-  dcl-pi *n;
-    CarrierIndex int(10) value;
-  end-pi;
-
-  WS_PLATFORM_REQUEST.WS_CARRIER_NAME = WS_CARR_NAME(CarrierIndex);
-
-  clear WS_JSON_PAYLOAD;
-
-  WS_JSON_PAYLOAD =
-    '{' +
-    '"submissionId":"' + %trimr(WS_PLATFORM_REQUEST.WS_SUBMISSION_ID) + '",' +
-    '"sourceOfSubmission":"' + %trimr(WS_PLATFORM_REQUEST.WS_SOURCE) + '",' +
-    '"insuredName":"' + %trimr(WS_PLATFORM_REQUEST.WS_INSURED_NAME) + '",' +
-    '"brokerEmailId":"' + %trimr(WS_PLATFORM_REQUEST.WS_BROKER_EMAIL) + '",' +
-    '"product":"' + %trimr(WS_PLATFORM_REQUEST.WS_PRODUCT) + '",' +
-    '"transaction":"' + %trimr(WS_PLATFORM_REQUEST.WS_TRANSACTION) + '",' +
-    '"inceptionDate":"' + %trimr(WS_PLATFORM_REQUEST.WS_INCEPTION_DATE) + '",' +
-    '"expirationDate":"' + %trimr(WS_PLATFORM_REQUEST.WS_EXPIRATION_DATE) + '",' +
-    '"programLimit":' + %trim(%char(WS_PLATFORM_REQUEST.WS_PROGRAM_LIMIT)) + ',' +
-    '"carrierName":"' + %trimr(WS_PLATFORM_REQUEST.WS_CARRIER_NAME) + '",' +
-    '"status":"' + %trimr(WS_PLATFORM_REQUEST.WS_PLATFORM_STATUS) + '"' +
-    '}';
-
-  WS_PAYLOAD_LEN = %len(%trimr(WS_JSON_PAYLOAD));
-
-  exec cics web open
-    host('whitespace.axainsurance.com')
-    portnumber(443)
-    scheme(HTTPS)
-  end-exec;
-
-  exec cics web send
-    from(WS_JSON_PAYLOAD)
-    length(WS_PAYLOAD_LEN)
-    mediatype('application/json')
-    method(POST)
-    path('/api/v2/submissions')
-    statuscode(WS_HTTP_STATUS)
-  end-exec;
-
-  exec cics web receive
-    into(WS_API_RESPONSE)
-    length(500)
-  end-exec;
-
-  exec cics web close
-  end-exec;
-
-  WS_PLATFORM_COUNT += 1;
-
-  if (WS_HTTP_STATUS = 200) or (WS_HTTP_STATUS = 201);
-    WS_SUCCESS_COUNT += 1;
-  endif;
-end-proc;
-
 dcl-proc ProcessSelectedWsCarriers;
   if WSSEL1I = 'X';
     SendToWhitespace(1);
   endif;
-
   if WSSEL2I = 'X';
     SendToWhitespace(2);
   endif;
-
   if WSSEL3I = 'X';
     SendToWhitespace(3);
   endif;
 end-proc;
 
-dcl-proc UpdateSubmissionStatus;
-  SUBMISSION_RECORD.SUBMISSION_STATUS = 'SUBMISSION-SENT';
-  exec cics rewrite
-    dataset('AXASUBM')
-    from(SUBMISSION_RECORD)
-  end-exec;
-
-  PLACEMENT_RECORD.PLACEMENT_STATUS = 'WITH-MARKET';
-  exec cics rewrite
-    dataset('AXAPLCMT')
-    from(PLACEMENT_RECORD)
-  end-exec;
-end-proc;
-
-dcl-proc SendMapProc;
-  SUBMIDO = SUBMISSION_RECORD.SUBMISSION_ID;
-  INSNAMEO = PLACEMENT_RECORD.PLACEMENT_NAME;
-  PRODNMO = PRODUCT_RECORD.PRODUCT_NAME;
-
-  WSSTSO = 'READY TO SEND TO ' + %trim(%char(WS_PLATFORM_COUNT)) +
-           ' CARRIERS VIA WHITESPACE';
-
-  exec cics send map('WSPLMAP') mapset('WSPLATFORM')
-    erase
-  end-exec;
-end-proc;
-
-exec cics handle condition
-  error(SendMap)
-end-exec;
-
-exec cics handle aid
-  enter(SendWsSubmission)
-  pf3(ReturnSubmission)
-  pf12(SendMap)
-end-exec;
-
-WS_SUBMISSION_KEY = %subst(DFHCOMMAREA:1:10);
-
-LoadWsCarriers();
-ReadSubmissionData();
-SendMapProc();
-
-goto EndProgram;
-
-SendWsSubmission:
-  exec cics receive map('WSPLMAP') mapset('WSPLATFORM')
-  end-exec;
-
-  BuildWsPayload();
-  ProcessSelectedWsCarriers();
-  UpdateSubmissionStatus();
-
-  DFHCOMMAREA = %replace(SUBMISSION_RECORD.SUBMISSION_ID: DFHCOMMAREA: 1: 10);
-  exec cics xctl program('QUOTERESP')
-    commarea(DFHCOMMAREA)
-  end-exec;
-
-SendMap:
-  SendMapProc();
-  goto EndProgram;
-
-ReturnSubmission:
-  DFHCOMMAREA = %replace(SUBMISSION_RECORD.SUBMISSION_ID: DFHCOMMAREA: 1: 10);
-  exec cics xctl program('SUBMISSN')
-    commarea(DFHCOMMAREA)
-  end-exec;
-
-EndProgram:
-  exec cics return
-  end-exec;
-
-  *inlr = *on;
-  return;
+*inlr = *on;
+return;

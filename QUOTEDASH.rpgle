@@ -1,7 +1,3 @@
-      // ****************************************************************
-      // QUOTEDASH - Quote Dashboard (RPGLE equivalent of QUOTEDASH.cbl)
-      // Converts CICS BMS program to native RPG with display file
-      // ****************************************************************
       Ctl-Opt DftActGrp(*No) ActGrp(*Caller);
 
       // Display file for screen (replaces BMS QUOTEDASH/QUOTEMP)
@@ -383,3 +379,4 @@
                     ' ACTIONS PROCESSED: ' + %Char(wsProcessedCount);
         DASHSTSO = statusMsg;
       End-Proc SendMap;
+

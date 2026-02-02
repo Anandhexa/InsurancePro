@@ -48,12 +48,6 @@
         QuoteDate        Char(10);
       End-Ds;
 
-      // Submission record instance
-      Dcl-Ds subRec LikeDs(SubmissionRecord);
-
-      // Quote record instance
-      Dcl-Ds qteRec LikeDs(QuoteRecord);
-
       // Screen field variables (from display file)
       // Output fields - Quote 1
       Dcl-S QUOTEID1O    Char(10);
@@ -379,4 +373,5 @@
                     ' ACTIONS PROCESSED: ' + %Char(wsProcessedCount);
         DASHSTSO = statusMsg;
       End-Proc SendMap;
+
 

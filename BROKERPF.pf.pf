@@ -1,0 +1,8 @@
+     A          R BROKERR
+     A            BROKERID          8A          TEXT('Broker ID')
+     A            BROKERUSER        10A         TEXT('Broker User ID')
+     A            BROKERPWD         8A          TEXT('Broker Password')
+     A            FIRSTNAME         20A         TEXT('First Name')
+     A            LASTNAME          20A         TEXT('Last Name')
+     A            BROKERROLE        10A         TEXT('Broker Role')
+     A            BROKERSTATUS      1A          TEXT('Broker Status')

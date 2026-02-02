@@ -1,0 +1,12 @@
+     A          R COMMR
+     A            COMMID            10A         TEXT('Communication ID')
+     A            COMMTYPE          15A         TEXT('Communication Type')
+     A            RECIPIENT         50A         TEXT('Recipient')
+     A            SENDER            50A         TEXT('Sender')
+     A            SUBJECT          100A         TEXT('Subject')
+     A            MESSAGE          500A         TEXT('Message Body')
+     A            COMMSTATUS        15A         TEXT('Communication Status')
+     A            SENTDATE          10A         TEXT('Sent Date')
+     A            SENTTIME          8A          TEXT('Sent Time')
+     A            DELIVSTATUS       15A         TEXT('Delivery Status')
+     A            RETRYCOUNT        2P 0        TEXT('Retry Count')

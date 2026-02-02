@@ -1,0 +1,11 @@
+     A          R BINDRULER
+     A            BINDRULEID        10A         TEXT('Binding Rule ID')
+     A            CARRIERNAME       30A         TEXT('Carrier Name')
+     A            PRODUCTTYPE       20A         TEXT('Product Type')
+     A            MINPREMIUM       12P 2        TEXT('Minimum Premium')
+     A            MAXPREMIUM       14P 2        TEXT('Maximum Premium')
+     A            CAPACITYLIMIT    14P 2        TEXT('Capacity Limit')
+     A            BINDMETHOD        15A         TEXT('Binding Method')
+     A            AUTOBINDFLG       1A          TEXT('Auto Bind Flag')
+     A            APPROVALREQ      1A          TEXT('Approval Required')
+     A            RULESTATUS       10A         TEXT('Rule Status')

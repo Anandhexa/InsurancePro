@@ -1,89 +1,85 @@
-**FREE
-/*********************************************************************/
-/* Program : BROKLGIN                                                 */
-/* Purpose : Broker Login Validation                                  */
-/* Source  : Mainframe COBOL Migration                                 */
-/*********************************************************************/
 
-ctl-opt dftactgrp(*no)
-        actgrp('INSURANCE')
-        option(*srcstmt : *nodebugio);
+ctl-opt dftactgrp(*no) actgrp(*new);
 
-/*-------------------------------------------------------------------*/
-/* COPYBOOKS                                                         */
-/*-------------------------------------------------------------------*/
- /copy QRPGLESRC,BROKER
+/*--------------------------------------------------------------
+** Input / Output Fields
+**--------------------------------------------------------------*/
+dcl-s UserID          char(10);
+dcl-s Password        char(10);
+dcl-s LoginStatus     char(10);
+dcl-s MessageText     char(50);
 
-/*-------------------------------------------------------------------*/
-/* WORKING STORAGE                                                   */
-/*-------------------------------------------------------------------*/
-dcl-s WS_Response     int(10);
-dcl-s WS_Login_Flag   char(1) inz('N');
+/*--------------------------------------------------------------
+** Control Flags
+**--------------------------------------------------------------*/
+dcl-s IsAuthenticated ind inz(*off);
 
-/*-------------------------------------------------------------------*/
-/* LINKAGE SECTION (DFHCOMMAREA)                                      */
-/*-------------------------------------------------------------------*/
-dcl-pi *n;
-   DFHCOMMAREA char(100);
-end-pi;
+/*==============================================================
+** Main Program Flow
+**==============================================================*/
+exsr LoadInput;
+exsr ValidateLogin;
+exsr SetLoginResult;
+exsr DisplayResult;
 
-/*-------------------------------------------------------------------*/
-/* MAIN LOGIC                                                        */
-/*-------------------------------------------------------------------*/
+*inlr = *on;
+return;
 
-/* Handle map and runtime errors */
-exec cics handle
-     condition(mapfail)
-     label(SEND_MAP)
-     condition(error)
-     label(SEND_MAP);
-end-exec;
+/*==============================================================
+** Load Login Input
+**==============================================================*/
+begsr LoadInput;
 
-/* Receive Login Screen */
-exec cics receive
-     map('LOGINMAP')
-     mapset('LOGINSCR');
-end-exec;
+   UserID   = 'RGARCIA';
+   Password = 'BROKER01';
 
-/* Validate credentials */
-exsr VALIDATE_LOGIN;
+endsr;
 
-/* Navigate based on login result */
-if WS_Login_Flag = 'Y';
+/*==============================================================
+** Validate Login Credentials
+**==============================================================*/
+begsr ValidateLogin;
 
-   exec cics xctl
-        program('BROKPIPE');
-   end-exec;
+   IsAuthenticated = *off;
 
-else;
+   if UserID = 'RGARCIA'
+      and Password = 'BROKER01';
 
-   exsr SEND_MAP;
-
-endif;
-
-/* Return control to CICS */
-exec cics return;
-end-exec;
-
-/*-------------------------------------------------------------------*/
-/* VALIDATE LOGIN                                                    */
-/*-------------------------------------------------------------------*/
-VALIDATE_LOGIN:
-   if USERIDI = 'RGARCIA'
-      and PASSWORDI = 'BROKER01';
-
-      WS_Login_Flag = 'Y';
+      IsAuthenticated = *on;
 
    endif;
-   return;
 
-/*-------------------------------------------------------------------*/
-/* SEND LOGIN MAP                                                    */
-/*-------------------------------------------------------------------*/
-SEND_MAP:
-   exec cics send
-        map('LOGINMAP')
-        mapset('LOGINSCR')
-        erase;
-   end-exec;
-   return;
+endsr;
+
+/*==============================================================
+** Set Login Result
+**==============================================================*/
+begsr SetLoginResult;
+
+   if IsAuthenticated;
+      LoginStatus = 'SUCCESS';
+      MessageText = 'LOGIN SUCCESSFUL';
+   else;
+      LoginStatus = 'FAILED';
+      MessageText = 'INVALID USER ID OR PASSWORD';
+   endif;
+
+endsr;
+
+/*==============================================================
+** Display Result
+**==============================================================*/
+
+begsr DisplayResult;
+
+   dsply ('USER ID : ' + UserID);
+   dsply ('STATUS  : ' + LoginStatus);
+   dsply ('MESSAGE : ' + MessageText);
+
+   if LoginStatus = 'SUCCESS';
+      dsply ('NAVIGATE TO BROKER PIPELINE');
+   else;
+      dsply ('RETURN TO LOGIN SCREEN');
+   endif;
+
+endsr;

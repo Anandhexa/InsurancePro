@@ -1,156 +1,86 @@
-**FREE
-/*********************************************************************/
-/* Program : APISUBM                                                  */
-/* Purpose : API Submission to UWB                                    */
-/* Source  : Mainframe COBOL CICS migration                            */
-/*********************************************************************/
+ctl-opt dftactgrp(*no) actgrp(*new);
 
-ctl-opt dftactgrp(*no)
-        actgrp('INSURANCE')
-        option(*nodebugio : *srcstmt);
+dcl-s CarrierRequestId     char(12);
+dcl-s CarrierName          char(30) inz('GENERIC CARRIER');
+dcl-s RequestPayload       char(1000);
+dcl-s ResponsePayload      char(1000);
+dcl-s InterfaceStatusCode  int(5);
+dcl-s ProcessingStatus     char(15);
+dcl-s CarrierReference     char(25);
+dcl-s RequestCounter       int(6) inz(700001);
 
-/*-------------------------------------------------------------------*/
-/* Files                                                             */
-/*-------------------------------------------------------------------*/
-dcl-f AXASUBM     usage(*input) keyed;
-dcl-f AXAPROD     usage(*input) keyed;
-dcl-f AXAPLCMT    usage(*input) keyed;
-dcl-f APISUBMDSPF workstn;
-
-/*-------------------------------------------------------------------*/
-/* Copybooks                                                         */
-/*-------------------------------------------------------------------*/
- /copy QRPGLESRC,APISUBM
- /copy QRPGLESRC,SUBMISSN
- /copy QRPGLESRC,PRODUCT
- /copy QRPGLESRC,PLACEMENT
- /copy QRPGLESRC,CLIENT
-
-/*-------------------------------------------------------------------*/
-/* Program Parameter (DFHCOMMAREA)                                    */
-/*-------------------------------------------------------------------*/
-dcl-pi *n;
-   pSubmissionKey char(10);
-end-pi;
-
-/*-------------------------------------------------------------------*/
-/* Working Storage                                                   */
-/*-------------------------------------------------------------------*/
-dcl-s wsSubmissionKey char(10);
-dcl-s wsApiUrl        char(100)
-      inz('https://uwb.axainsurance.com/api/v1/submissions');
-dcl-s wsAuthHeader    char(50)
-      inz('Authorization: Basic QlJPS0VSOkJST0tFUjEyMw==');
-dcl-s wsHttpStatus    packed(3:0);
-dcl-s wsApiResponse   char(200);
-
-/*-------------------------------------------------------------------*/
-/* Initialization                                                    */
-/*-------------------------------------------------------------------*/
-wsSubmissionKey = pSubmissionKey;
-
-readSubmissionData();
-sendMap();
-
-/*-------------------------------------------------------------------*/
-/* Main Screen Loop                                                  */
-/*-------------------------------------------------------------------*/
-dou *inlr;
-
-   exfmt APIMAP;
-
-   if *in12;
-      sendMap();
-   elseif *in03;
-      returnSubmission();
-   elseif *in00;
-      sendApiRequest();
-   endif;
-
-enddo;
+exsr Initialize;
+exsr BuildCarrierRequest;
+exsr SendCarrierRequest;
+exsr EvaluateCarrierResponse;
+exsr DisplayResult;
 
 *inlr = *on;
 return;
 
-/*-------------------------------------------------------------------*/
-/* Procedures                                                        */
-/*-------------------------------------------------------------------*/
-dcl-proc readSubmissionData;
+begsr Initialize;
 
-   chain wsSubmissionKey AXASUBM;
-   if %notfound(AXASUBM);
-      return;
-   endif;
+   ProcessingStatus    = 'NEW';
+   InterfaceStatusCode = 0;
+   RequestPayload      = *blanks;
+   ResponsePayload     = *blanks;
+   CarrierReference    = *blanks;
 
-   chain Product_Id AXAPROD;
-   chain Placement_Id AXAPLCMT;
+endsr;
 
-end-proc;
+begsr BuildCarrierRequest;
 
-/*-------------------------------------------------------------------*/
-dcl-proc sendApiRequest;
+   CarrierRequestId = 'CAR' + %char(RequestCounter);
+   RequestCounter += 1;
 
-   buildApiRequest();
-   callUwbApi();
-   sendMap();
+   RequestPayload =
+      '{ "requestId": "' + CarrierRequestId +
+      '", "carrier": "' + CarrierName +
+      '", "action": "PROCESS" }';
 
-end-proc;
+endsr;
 
-/*-------------------------------------------------------------------*/
-dcl-proc buildApiRequest;
+begsr SendCarrierRequest;
 
-   Lead_Broker         = 'ROSALIA GARCIA';
-   First_Named_Insured = Placement_Name;
-   Business_Type       = 'NEW BUSINESS';
-   Country             = 'USA';
-   City                = 'NEW YORK';
-   Zip_Postal_Code     = '10001';
-   Inception_Date      = Submission_Date;
-   Expiration_Date     = Valid_Until_Date;
-   Program_Limit       = Coverage_Limit;
-   Product_Name        = Product_Name;
-   Interest            = InterestI;
-   Deductible          = Deductible;
-   Broker_Subm_Ref     = Broker_Ref;
-   RFQ_Ref             = RFQRefI;
-   Distribution_Type   = 'API';
-   Carrier_Name        = CarrierI;
+   if %len(%trim(RequestPayload)) > 0;
 
-end-proc;
+      InterfaceStatusCode = 200;
+      ResponsePayload =
+         '{ "result": "OK", "carrierRef": "CAR-REF-45678" }';
 
-/*-------------------------------------------------------------------*/
-dcl-proc callUwbApi;
-
-   /* --------------------------------------------------------------- */
-   /* HTTP CALL PLACEHOLDER                                          */
-   /* Replace with HTTPAPI or QSYS2.HTTP_POST in production           */
-   /* --------------------------------------------------------------- */
-
-   wsHttpStatus = 200;
-   wsApiResponse = '{"status":"success"}';
-
-   if wsHttpStatus = 200 or wsHttpStatus = 201;
-      ApiStatusO = 'API SUBMISSION SUCCESSFUL';
    else;
-      ApiStatusO = 'API SUBMISSION FAILED';
+
+      InterfaceStatusCode = 500;
+      ResponsePayload =
+         '{ "result": "ERROR", "carrierRef": "" }';
+
    endif;
 
-end-proc;
+endsr;
 
-/*-------------------------------------------------------------------*/
-dcl-proc sendMap;
+begsr EvaluateCarrierResponse;
 
-   LeadBrkrO = 'ROSALIA GARCIA';
-   ProdNmO   = Product_Name;
-   ProgLmtO  = Coverage_Limit;
+   if InterfaceStatusCode = 200;
 
-   exfmt APIMAP;
+      ProcessingStatus = 'SUCCESS';
+      CarrierReference = 'CAR-' + %char(%timestamp():7:6);
 
-end-proc;
+   else;
 
-/*-------------------------------------------------------------------*/
-dcl-proc returnSubmission;
+      ProcessingStatus = 'FAILED';
+      CarrierReference = 'N/A';
 
-   callp SUBMISSN(Submission_Id);
+   endif;
 
-end-proc;
+endsr;
+
+begsr DisplayResult;
+
+   dsply ('---------------------------------------');
+   dsply ('CARRIER REQUEST ID : ' + CarrierRequestId);
+   dsply ('CARRIER NAME       : ' + CarrierName);
+   dsply ('STATUS             : ' + ProcessingStatus);
+   dsply ('REFERENCE          : ' + CarrierReference);
+   dsply ('---------------------------------------');
+
+endsr;

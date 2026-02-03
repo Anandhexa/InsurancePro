@@ -41,7 +41,7 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION / PRODUCT / PLACEMENT
+C* READ SUBMISSION
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90

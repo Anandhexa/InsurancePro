@@ -45,7 +45,7 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION & CLIENT DATA
+C* READ SUBMISSION CLIENT DATA
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90
@@ -80,7 +80,6 @@ C     BUILDDOC      BEGSR
 C                   MOVEL     'DOC'       DOCUMENTID
 C                   Z-ADD     WSDOCCNTR   DOCUMENTID
 C                   ADD       1           WSDOCCNTR
-C*
 C                   MOVEL     CLIENTID    CLIENTID
 C                   MOVEL     SUBMISSIONID SUBMISSIONID
 C                   MOVEL     DOCTYPEI    DOCUMENTTYPE

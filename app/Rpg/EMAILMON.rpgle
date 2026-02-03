@@ -46,12 +46,10 @@ C                   MOVEL     'uwb@axa.com'        WSEMAILFROM(1)
 C                   MOVEL     'RFQ001'             WSRFQID(1)
 C                   MOVEL     'LLOYDS'             WSCARRIER(1)
 C                   MOVEL     'PENDING'            WSSTATUS(1)
-C
 C                   MOVEL     'quotes@zurich'      WSEMAILFROM(2)
 C                   MOVEL     'RFQ002'             WSRFQID(2)
 C                   MOVEL     'ZURICH'             WSCARRIER(2)
 C                   MOVEL     'PENDING'            WSSTATUS(2)
-C
 C                   MOVEL     'uw@allianz'         WSEMAILFROM(3)
 C                   MOVEL     'RFQ003'             WSRFQID(3)
 C                   MOVEL     'ALLIANZ'            WSCARRIER(3)
@@ -64,12 +62,10 @@ C*****************************************************************
 C     EXTRACT       BEGSR
 C                   CALL      'EMAILEXT'
 C                   PARM                    DFHCOMMAREA
-C
 C                   MOVEL     'EXTRACTED'          WSSTATUS(1)
 C                   MOVEL     'EXTRACTED'          WSSTATUS(2)
 C                   MOVEL     'EXTRACTED'          WSSTATUS(3)
 C                   ADD       3                   WSEXTCNT
-C
 C                   EXSR      SENDMAP
 C                   ENDSR
 
@@ -81,22 +77,18 @@ C                   MOVEL     WSEMAILFROM(1)       EMAILFROM1O
 C                   MOVEL     WSRFQID(1)           RFQID1O
 C                   MOVEL     WSCARRIER(1)         CARRIER1O
 C                   MOVEL     WSSTATUS(1)          STATUS1O
-C
 C                   MOVEL     WSEMAILFROM(2)       EMAILFROM2O
 C                   MOVEL     WSRFQID(2)           RFQID2O
 C                   MOVEL     WSCARRIER(2)         CARRIER2O
 C                   MOVEL     WSSTATUS(2)          STATUS2O
-C
 C                   MOVEL     WSEMAILFROM(3)       EMAILFROM3O
 C                   MOVEL     WSRFQID(3)           RFQID3O
 C                   MOVEL     WSCARRIER(3)         CARRIER3O
 C                   MOVEL     WSSTATUS(3)          STATUS3O
-C
 C                   MOVEL     'EMAILS PROCESSED: ' MONSTSO
 C                   CAT       WSEXTCNT             MONSTSO
 C                   CAT       ' QUOTES EXTRACTED AND STORED'
 C                             MONSTSO
-C
 C                   DSPLY     MONSTSO
 C                   ENDSR
 
@@ -114,7 +106,6 @@ C*****************************************************************
 C     EMAILPROC     BEGSR
 C                   CALL      'EMAILPROC'
 C                   PARM                    DFHCOMMAREA
-C
 C                   EXSR      LOADEMAIL
 C                   EXSR      SENDMAP
 C                   ENDSR
@@ -125,6 +116,5 @@ C*****************************************************************
 C     EMAILANAL     BEGSR
 C                   CALL      'EMAILANAL'
 C                   PARM                    DFHCOMMAREA
-C
 C                   EXSR      SENDMAP
 C                   ENDSR

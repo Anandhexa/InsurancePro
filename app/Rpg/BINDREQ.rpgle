@@ -1,329 +1,135 @@
-**FREE
-/*********************************************************************/
-/* Program     : BINDREQ                                              */
-/* Description : Bind Request Processing                              */
-/* Converted   : COBOL -> RPGLE Free Format                            */
-/*********************************************************************/
+ctl-opt dftactgrp(*no) actgrp(*new);
 
-ctl-opt dftactgrp(*no)
-        actgrp(*caller)
-        option(*srcstmt:*nodebugio);
+dcl-s SubmissionKey      char(10);
+dcl-s BindCount          zoned(2:0) inz(0);
+dcl-s SuccessCount       zoned(2:0) inz(0);
+dcl-s BindCounter        zoned(6:0) inz(100001);
+dcl-s Index              zoned(3:0);
 
-/*-------------------------------------------------------------------*/
-/* COPYBOOKS                                                          */
-/*-------------------------------------------------------------------*/
- /copy BIND
- /copy QUOTE
- /copy BINDMAP        // Map copybook
+dcl-s JsonPayload        char(1000);
+dcl-s HttpStatus         zoned(3:0);
 
-/*-------------------------------------------------------------------*/
-/* WORKING STORAGE                                                    */
-/*-------------------------------------------------------------------*/
-dcl-s WS_Response        int(10);
-dcl-s WS_SubmissionKey  char(10);
-dcl-s WS_BindCount      packed(2:0) inz(0);
-dcl-s WS_SuccessCount   packed(2:0) inz(0);
-dcl-s WS_BindCounter    packed(6:0) inz(100001);
-dcl-s WS_HttpStatus     packed(3:0);
-dcl-s WS_ApiResponse    char(500);
-dcl-s WS_JsonPayload    char(1000);
+dcl-s QuoteID        char(10)  dim(3);
+dcl-s CarrierName    char(30)  dim(3);
+dcl-s Premium        packed(11:2) dim(3);
+dcl-s CommMethod     char(15)  dim(3);
+dcl-s BindStatus     char(20)  dim(3);
+dcl-s ConfRef        char(20)  dim(3);
 
-/*-------------------------------------------------------------------*/
-/* QUOTE TABLE                                                        */
-/*-------------------------------------------------------------------*/
-dcl-ds WS_QuoteTable dim(3);
-   WS_QuoteID      char(10);
-   WS_CarrierName  char(30);
-   WS_Premium      packed(12:2);
-   WS_CommMethod   char(15);
-   WS_BindStatus   char(20);
-   WS_ConfRef      char(20);
-end-ds;
+dcl-s BindID           char(12);
+dcl-s BindDate         char(8);
+dcl-s AuditLog         char(200);
 
-/*-------------------------------------------------------------------*/
-/* LINKAGE SECTION                                                    */
-/*-------------------------------------------------------------------*/
-dcl-pi *n;
-   DFHCOMMAREA char(100);
-end-pi;
+exsr LoadQuotes;
+exsr ProcessSelections;
+exsr DisplaySummary;
 
-/*-------------------------------------------------------------------*/
-/* MAIN LOGIC                                                         */
-/*-------------------------------------------------------------------*/
-WS_SubmissionKey = %subst(DFHCOMMAREA:1:10);
+*inlr = *on;
+return;
 
-exec cics handle
-     condition(error)
-     label(SEND_MAP);
-end-exec;
+begsr LoadQuotes;
 
-exec cics handle aid
-     enter(SEND_BIND_REQUEST)
-     pf3(RETURN_DASHBOARD)
-     pf4(BINDING_LOGIC)
-     pf5(COMMUNICATION_MANAGER)
-     pf12(MAIN_PARA);
-end-exec;
+   BindCount = 3;
 
-MAIN_PARA:
-   exsr LOAD_AVAILABLE_QUOTES;
-   exsr SEND_MAP;
-   return;
+   QuoteID(1)     = 'QTE001';
+   CarrierName(1) = 'LLOYDS';
+   Premium(1)     = 125000.00;
+   CommMethod(1)  = 'API';
+   BindStatus(1)  = 'READY';
+   ConfRef(1)     = *blanks;
 
-/*-------------------------------------------------------------------*/
-/* LOAD AVAILABLE QUOTES                                              */
-/*-------------------------------------------------------------------*/
-LOAD_AVAILABLE_QUOTES:
-   WS_BindCount = 3;
+   QuoteID(2)     = 'QTE002';
+   CarrierName(2) = 'ZURICH';
+   Premium(2)     = 135000.00;
+   CommMethod(2)  = 'PLATFORM';
+   BindStatus(2)  = 'READY';
+   ConfRef(2)     = *blanks;
 
-   WS_QuoteID(1)     = 'QTE001';
-   WS_CarrierName(1)= 'LLOYDS';
-   WS_Premium(1)    = 125000.00;
-   WS_CommMethod(1) = 'API';
-   WS_BindStatus(1) = 'READY';
-   WS_ConfRef(1)    = *blanks;
+   QuoteID(3)     = 'QTE003';
+   CarrierName(3) = 'ALLIANZ';
+   Premium(3)     = 118000.00;
+   CommMethod(3)  = 'EMAIL';
+   BindStatus(3)  = 'READY';
+   ConfRef(3)     = *blanks;
 
-   WS_QuoteID(2)     = 'QTE002';
-   WS_CarrierName(2)= 'ZURICH';
-   WS_Premium(2)    = 135000.00;
-   WS_CommMethod(2) = 'TRADING PLATFORM';
-   WS_BindStatus(2) = 'READY';
-   WS_ConfRef(2)    = *blanks;
+endsr;
 
-   WS_QuoteID(3)     = 'QTE003';
-   WS_CarrierName(3)= 'ALLIANZ';
-   WS_Premium(3)    = 118000.00;
-   WS_CommMethod(3) = 'EMAIL';
-   WS_BindStatus(3) = 'READY';
-   WS_ConfRef(3)    = *blanks;
-   return;
+begsr ProcessSelections;
 
-/*-------------------------------------------------------------------*/
-/* RECEIVE MAP & PROCESS SELECTIONS                                   */
-/*-------------------------------------------------------------------*/
-SEND_BIND_REQUEST:
-   exec cics receive
-        map('BINDMAP')
-        mapset('BINDREQ');
-   end-exec;
+   for Index = 1 to BindCount;
+      exsr SendBindRequest;
+   endfor;
 
-   exsr PROCESS_BIND_SELECTIONS;
-   exsr SEND_MAP;
-   return;
+endsr;
 
-/*-------------------------------------------------------------------*/
-PROCESS_BIND_SELECTIONS:
-   if BIND1I = 'X';
-      WS_Response = 1;
-      exsr SEND_BIND_BY_METHOD;
-   endif;
+begsr SendBindRequest;
 
-   if BIND2I = 'X';
-      WS_Response = 2;
-      exsr SEND_BIND_BY_METHOD;
-   endif;
-
-   if BIND3I = 'X';
-      WS_Response = 3;
-      exsr SEND_BIND_BY_METHOD;
-   endif;
-   return;
-
-/*-------------------------------------------------------------------*/
-SEND_BIND_BY_METHOD:
    select;
-      when WS_CommMethod(WS_Response) = 'API';
-           exsr SEND_API_BIND;
-      when WS_CommMethod(WS_Response) = 'TRADING PLATFORM';
-           exsr SEND_PLATFORM_BIND;
-      when WS_CommMethod(WS_Response) = 'EMAIL';
-           exsr SEND_EMAIL_BIND;
+      when CommMethod(Index) = 'API';
+         exsr SendApiRequest;
+
+      when CommMethod(Index) = 'PLATFORM';
+         exsr SendPlatformRequest;
+
+      when CommMethod(Index) = 'EMAIL';
+         exsr SendEmailRequest;
    endsl;
 
-   exsr CREATE_BIND_RECORD;
-   WS_SuccessCount += 1;
-   return;
+   exsr CreateBindRecord;
+   SuccessCount += 1;
 
-/*-------------------------------------------------------------------*/
-/* API BIND                                                           */
-/*-------------------------------------------------------------------*/
-SEND_API_BIND:
-   WS_JsonPayload =
-     '{"bindRequest":{"quoteId":"' + WS_QuoteID(WS_Response) +
-     '","carrierName":"' + WS_CarrierName(WS_Response) +
-     '","bindAmount":' + %char(WS_Premium(WS_Response)) +
-     ',"communicationMethod":"API"}}';
+endsr;
 
-   exec cics web open
-        host('api.carrier.com')
-        portnumber(443)
-        scheme(HTTPS);
-   end-exec;
+begsr SendApiRequest;
 
-   exec cics web send
-        from(WS_JsonPayload)
-        length(%len(%trimr(WS_JsonPayload)))
-        mediatype('application/json')
-        method(POST)
-        path('/v1/bind')
-        statuscode(WS_HttpStatus);
-   end-exec;
+   JsonPayload =
+      '{"quoteId":"' + %trim(QuoteID(Index)) +
+      '","carrier":"' + %trim(CarrierName(Index)) +
+      '","amount":' + %char(Premium(Index)) + '}';
 
-   exec cics web close;
-   end-exec;
+   BindStatus(Index) = 'SENT';
+   ConfRef(Index)    = 'API-' + %char(%date());
 
-   if WS_HttpStatus = 200 or WS_HttpStatus = 201;
-      WS_BindStatus(WS_Response) = 'SENT';
-      WS_ConfRef(WS_Response) =
-         'API-' + %subst(%char(%timestamp()):9:6);
-   else;
-      WS_BindStatus(WS_Response) = 'FAILED';
-   endif;
-   return;
+endsr;
 
-/*-------------------------------------------------------------------*/
-/* PLATFORM BIND                                                      */
-/*-------------------------------------------------------------------*/
-SEND_PLATFORM_BIND:
-   exec cics web open
-        host('whitespace.axainsurance.com')
-        portnumber(443)
-        scheme(HTTPS);
-   end-exec;
+begsr SendPlatformRequest;
 
-   WS_JsonPayload =
-     '{"bindRequest":{"quoteId":"' + WS_QuoteID(WS_Response) +
-     '","carrierName":"' + WS_CarrierName(WS_Response) +
-     '","bindAmount":' + %char(WS_Premium(WS_Response)) +
-     ',"communicationMethod":"TRADING_PLATFORM"}}';
+   JsonPayload =
+      '{"quote":"' + %trim(QuoteID(Index)) +
+      '","carrier":"' + %trim(CarrierName(Index)) + '"}';
 
-   exec cics web send
-        from(WS_JsonPayload)
-        length(%len(%trimr(WS_JsonPayload)))
-        mediatype('application/json')
-        method(POST)
-        path('/api/v2/bind')
-        statuscode(WS_HttpStatus);
-   end-exec;
+   BindStatus(Index) = 'SENT';
+   ConfRef(Index)    = 'PLAT-' + %char(%date());
 
-   exec cics web close;
-   end-exec;
+endsr;
 
-   if WS_HttpStatus = 200 or WS_HttpStatus = 201;
-      WS_BindStatus(WS_Response) = 'SENT';
-      WS_ConfRef(WS_Response) =
-         'WS-' + %subst(%char(%timestamp()):9:6);
-   else;
-      WS_BindStatus(WS_Response) = 'FAILED';
-   endif;
-   return;
+begsr SendEmailRequest;
 
-/*-------------------------------------------------------------------*/
-/* EMAIL BIND                                                         */
-/*-------------------------------------------------------------------*/
-SEND_EMAIL_BIND:
-   WS_JsonPayload =
-     'BIND REQUEST FOR QUOTE ' + WS_QuoteID(WS_Response) +
-     ' CARRIER: ' + WS_CarrierName(WS_Response) +
-     ' AMOUNT: ' + %char(WS_Premium(WS_Response)) +
-     ' METHOD: EMAIL';
+   JsonPayload =
+      'BIND REQUEST FOR ' + %trim(QuoteID(Index)) +
+      ' CARRIER ' + %trim(CarrierName(Index)) +
+      ' AMOUNT ' + %char(Premium(Index));
 
-   exec cics send text
-        from(WS_JsonPayload)
-        length(%len(%trimr(WS_JsonPayload)))
-        print;
-   end-exec;
+   BindStatus(Index) = 'SENT';
+   ConfRef(Index)    = 'MAIL-' + %char(%date());
 
-   WS_BindStatus(WS_Response) = 'SENT';
-   WS_ConfRef(WS_Response) =
-      'EMAIL-' + %subst(%char(%timestamp()):9:6);
-   return;
+endsr;
 
-/*-------------------------------------------------------------------*/
-/* CREATE BIND RECORD                                                 */
-/*-------------------------------------------------------------------*/
-CREATE_BIND_RECORD:
-   BIND_ID = 'BIND' + %char(WS_BindCounter);
-   WS_BindCounter += 1;
+begsr CreateBindRecord;
 
-   QUOTE_ID               = WS_QuoteID(WS_Response);
-   CARRIER_NAME           = WS_CarrierName(WS_Response);
-   COMMUNICATION_METHOD   = WS_CommMethod(WS_Response);
-   BIND_STATUS            = WS_BindStatus(WS_Response);
-   BIND_DATE              = %subst(%char(%date()):1:8);
-   BIND_AMOUNT            = WS_Premium(WS_Response);
-   CONFIRMATION_REF       = WS_ConfRef(WS_Response);
+   BindID = 'BIND' + %char(BindCounter);
+   BindCounter += 1;
 
-   AUDIT_LOG =
-      'BIND REQUEST SENT VIA ' + COMMUNICATION_METHOD +
-      ' FOR QUOTE ' + QUOTE_ID +
-      ' ON ' + BIND_DATE;
+   BindDate = %char(%date());
 
-   exec cics write
-        dataset('AXABIND')
-        from(BIND_REQUEST_RECORD)
-        ridfld(BIND_ID);
-   end-exec;
-   return;
+   AuditLog =
+      'BIND REQUEST SENT FOR QUOTE ' + %trim(QuoteID(Index)) +
+      ' USING ' + %trim(CommMethod(Index));
 
-/*-------------------------------------------------------------------*/
-/* SEND MAP                                                          */
-/*-------------------------------------------------------------------*/
-SEND_MAP:
-   QUOTEID1O = WS_QuoteID(1);
-   CARRIER1O = %subst(WS_CarrierName(1):1:8);
-   PREMIUM1O = WS_Premium(1);
-   COMMETH1O = WS_CommMethod(1);
-   STATUS1O  = %subst(WS_BindStatus(1):1:6);
-   CONFREF1O = WS_ConfRef(1);
+endsr;
 
-   QUOTEID2O = WS_QuoteID(2);
-   CARRIER2O = %subst(WS_CarrierName(2):1:8);
-   PREMIUM2O = WS_Premium(2);
-   COMMETH2O = WS_CommMethod(2);
-   STATUS2O  = %subst(WS_BindStatus(2):1:6);
-   CONFREF2O = WS_ConfRef(2);
+begsr DisplaySummary;
 
-   QUOTEID3O = WS_QuoteID(3);
-   CARRIER3O = %subst(WS_CarrierName(3):1:8);
-   PREMIUM3O = WS_Premium(3);
-   COMMETH3O = WS_CommMethod(3);
-   STATUS3O  = %subst(WS_BindStatus(3):1:6);
-   CONFREF3O = WS_ConfRef(3);
+   dsply ('Bind Requests Processed: ' + %char(SuccessCount));
 
-   BINDSTSO = 'BIND REQUESTS PROCESSED: ' + %char(WS_SuccessCount);
-
-   exec cics send
-        map('BINDMAP')
-        mapset('BINDREQ')
-        erase;
-   end-exec;
-   return;
-
-/*-------------------------------------------------------------------*/
-/* NAVIGATION                                                         */
-/*-------------------------------------------------------------------*/
-RETURN_DASHBOARD:
-   exec xctl
-        program('QUOTEFULL')
-        commarea(DFHCOMMAREA);
-   end-exec;
-
-BINDING_LOGIC:
-   DFHCOMMAREA = WS_QuoteID(1);
-   exec link
-        program('BINDLOGIC')
-        commarea(DFHCOMMAREA);
-   end-exec;
-   exsr LOAD_AVAILABLE_QUOTES;
-   exsr SEND_MAP;
-   return;
-
-COMMUNICATION_MANAGER:
-   DFHCOMMAREA = WS_QuoteID(1);
-   exec link
-        program('BINDCOMM')
-        commarea(DFHCOMMAREA);
-   end-exec;
-   exsr SEND_MAP;
-   return;
+endsr;

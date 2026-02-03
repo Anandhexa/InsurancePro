@@ -5,7 +5,6 @@ H* Source  : Mainframe COBOL Migration
 H*****************************************************************
 
 F*****************************************************************
-F* Files (CICS / VSAM equivalents on IBM i)
 F*****************************************************************
 FAXASUBM   IF   E           K DISK
 FAXADOC    UF   E           K DISK
@@ -65,7 +64,6 @@ C     BUILDMD       BEGSR
 C                   MOVEL     'DOC'       DOCUMENTID
 C                   Z-ADD     WSDOCCNTR   DOCUMENTID
 C                   ADD       1           WSDOCCNTR
-C*
 C                   MOVEL     CLIENTID    CLIENTID
 C                   MOVEL     SUBMIDI     SUBMISSIONID
 C                   MOVEL     DOCTYPEI    DOCUMENTTYPE
@@ -80,7 +78,6 @@ C                   MOVEL     CLIENTI     CLIENTNAME
 C                   MOVEL     POLIYEARI   POLICYYEAR
 C                   MOVEL     CARRIERI   CARRIERNAME
 C                   MOVEL     DATERECVI  DATERECEIVED
-C*
 C                   MOVEL     DOCUMENTTYPE METADATATAGS
 C                   CAT       '|'         METADATATAGS
 C                   CAT       CLIENTNAME  METADATATAGS

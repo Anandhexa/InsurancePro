@@ -60,14 +60,12 @@ C                   MOVEL     'Quote Response - RFQ001' EMAILSUBJ
 C                   MOVEL     'Quote attached for RFQ001 from Lloyds'
 C                             EMAILBODY
 C                   MOVEL     'Quote_RFQ001_Lloyds.pdf' ATTACHNAME
-C
 C                   WHEN      WSEMAILCNT = 2
 C                   MOVEL     'quotes@zurich.com' EMAILFROM
 C                   MOVEL     'RE: Quote Request RFQ002' EMAILSUBJ
 C                   MOVEL     'Please find quote for submission RFQ002'
 C                             EMAILBODY
 C                   MOVEL     'Zurich_Quote_RFQ002.xlsx' ATTACHNAME
-C
 C                   WHEN      WSEMAILCNT = 3
 C                   MOVEL     'underwriting@allianz.com' EMAILFROM
 C                   MOVEL     'Quote RFQ003 - Allianz Response' EMAILSUBJ
@@ -123,7 +121,6 @@ C                   MOVEL     '2024-01-15' EXTQTEDT
 C                   MOVEL     '2024-02-15' EXTVALID
 C                   MOVEL     'Standard terms and conditions apply'
 C                             EXTTERMS
-C
 C                   WHEN      EXTCARRIER = 'ZURICH INSURANCE'
 C                   Z-ADD     135000.00  EXTQTEAMT
 C                   Z-ADD     16500.00   EXTPREMIUM
@@ -133,7 +130,6 @@ C                   MOVEL     '2024-01-16' EXTQTEDT
 C                   MOVEL     '2024-02-16' EXTVALID
 C                   MOVEL     'Enhanced coverage with additional benefits'
 C                             EXTTERMS
-C
 C                   WHEN      EXTCARRIER = 'ALLIANZ GROUP'
 C                   Z-ADD     118000.00  EXTQTEAMT
 C                   Z-ADD     14200.00   EXTPREMIUM
@@ -168,7 +164,6 @@ C                   MOVEL     *BLANKS     ACTION
 C                   MOVEL     EXTQTEDT    QUOTEDATE
 C                   Z-ADD     EXTQTEAMT  QUOTEAMOUNT
 C                   MOVEL     'RECEIVED'  QUOTESTATUS
-C
 C     QUOTEID       WRITE     AXAQUOTE
 C                   ADD       1           WSPROCCNT
 C                   MOVEL     'EXTRACTED' EXTRACTIONSTATUS

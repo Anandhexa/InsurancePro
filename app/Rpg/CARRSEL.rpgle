@@ -1,18 +1,15 @@
 H*****************************************************************
 H* Program : CARRSEL
-H* Purpose : Carrier Selection & RFQ Submission
+H* Purpose : Carrier Selection RFQ Submission
 H* Source  : Mainframe COBOL Migration
 H*****************************************************************
 
-F*****************************************************************
-F* Files (CICS-managed VSAM equivalents)
-F*****************************************************************
 FAXASUBM   IF   E           K DISK
 FAXAPROD   IF   E           K DISK
 FAXAPLCMT  IF   E           K DISK
 
 E*****************************************************************
-E* Compile-time arrays for Carrier Table (OCCURS 3)
+E* Compile time arrays Carrier Table
 E*****************************************************************
 E CARRNAME     25  3
 E CARRURL     100  3
@@ -77,7 +74,7 @@ C                             CARRAUTH(3)
 C                   ENDSR
 
 C*****************************************************************
-C* READ SUBMISSION / PRODUCT / PLACEMENT
+C* READ SUBMISSION
 C*****************************************************************
 C     READSUBM      BEGSR
 C     WSSUBKEY      CHAIN     AXASUBM                  90
@@ -103,8 +100,9 @@ C*****************************************************************
 C* SEND MAP
 C*****************************************************************
 C     SENDMAP       BEGSR
-C                   EVAL      RFQSTATUSO =
-C                             'RFQ SENT TO ' + %CHAR(WSSELCOUNT) +
-C                             ' CARRIERS, ' + %CHAR(WSSUCCOUNT) +
+C                   EVAL      RFQSTATUSO = 'RFQ SENT TO ' +
+C                             %CHAR(WSSELCOUNT) +
+C                             ' CARRIERS, ' +
+C                             %CHAR(WSSUCCOUNT) +
 C                             ' SUCCESSFUL'
 C                   ENDSR

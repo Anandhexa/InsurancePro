@@ -76,7 +76,7 @@ C* BUILD NEW CLAIM
 C*****************************************************************
 C     BUILDNEW      BEGSR
 C                   MOVEL     'CLM'        CLAIMID
-C                   MOVEL     WSCLMCNT     CLAIMID+3
+C                   MOVEL     WSCLMCNT     CLAIMID
 C                   ADD       1            WSCLMCNT
 
 C                   MOVEL     'CLAIM-'     CLAIMNUMBER

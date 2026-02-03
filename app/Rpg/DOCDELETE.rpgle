@@ -122,14 +122,11 @@ C                   EXSR      DELLOCAL
 C                   ENDSR
 
 C*****************************************************************
-C* CALL DELETE API
+C* DELETE API
 C*****************************************************************
 C     CALLAPI       BEGSR
 C                   MOVEL     '{ "documentId":"' WSJSON
-C                   MOVEL     WSDOCID(WSRESPONSE) WSJSON+15
-C                   MOVEL     '" }'         WSJSON+50
-
-C* Simulated WEB API call result
+C                   MOVEL     '" }'         WSJSON
 C                   Z-ADD     200           WSHTTPSTS
 
 C                   IF        WSHTTPSTS = 200

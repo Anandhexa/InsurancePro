@@ -41,7 +41,6 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90
@@ -65,14 +64,12 @@ C                   MOVEL     COVERAGELIMIT PROGLMTO
 C                   ENDSR
 
 C*****************************************************************
-C* PRINT DOCUMENT
 C*****************************************************************
 C     PRINTDOC      BEGSR
 C                   MOVEL     DOCMAP       WSRESPONSE
 C                   ENDSR
 
 C*****************************************************************
-C* RETURN TO SUBMISSION
 C*****************************************************************
 C     RETSUB        BEGSR
 C                   MOVEL     SUBMISSIONID DFHCOMMAREA

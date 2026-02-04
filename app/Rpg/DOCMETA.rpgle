@@ -41,7 +41,6 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION DATA
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90
@@ -103,14 +102,12 @@ C                   ENDIF
 C                   ENDSR
 
 C*****************************************************************
-C* SAVE DOCUMENT METADATA RECORD
 C*****************************************************************
 C     SAVEDOC       BEGSR
 C     DOCUMENTID    WRITE     AXADOC
 C                   ENDSR
 
 C*****************************************************************
-C* SEND MAP
 C*****************************************************************
 C     SENDMAP       BEGSR
 C                   MOVEL     SUBMISSIONID SUBMIDO
@@ -121,7 +118,6 @@ C                   CAT       WSUPLDCNT METASTSO
 C                   ENDSR
 
 C*****************************************************************
-C* RETURN TO DOCUPLOAD
 C*****************************************************************
 C     RETUPL        BEGSR
 C                   MOVEL     SUBMISSIONID DFHCOMMAREA

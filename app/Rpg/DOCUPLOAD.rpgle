@@ -45,7 +45,6 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION CLIENT DATA
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90
@@ -125,7 +124,6 @@ C                   CAT       DOCUMENTSTATUS UPLOADSTSO
 C                   ENDSR
 
 C*****************************************************************
-C* DELETE DOCUMENTS
 C*****************************************************************
 C     DELDOC        BEGSR
 C                   MOVEL     SUBMISSIONID DFHCOMMAREA
@@ -141,7 +139,6 @@ C                   CALL      'DOCMETA'
 C                   ENDSR
 
 C*****************************************************************
-C* RETURN TO SUBMISSION
 C*****************************************************************
 C     RETSUB        BEGSR
 C                   MOVEL     SUBMISSIONID DFHCOMMAREA

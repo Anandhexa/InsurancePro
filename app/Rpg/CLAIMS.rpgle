@@ -43,7 +43,6 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ CLAIM
 C*****************************************************************
 C     READCLM       BEGSR
 C     WSCLAIMKEY    CHAIN     AXACLAIMS                90
@@ -65,7 +64,6 @@ C                   EXSR      BUILDNEW
 C                   ENDSR
 
 C*****************************************************************
-C* READ POLICY
 C*****************************************************************
 C     READPOL       BEGSR
 C     POLICYID      CHAIN     AXAPOLICY                91
@@ -134,7 +132,6 @@ C                   MOVEL     CLAIMSTATUS CLMSTSO
 C                   ENDSR
 
 C*****************************************************************
-C* CLAIM INVESTIGATION
 C*****************************************************************
 C     CLMINV        BEGSR
 C                   MOVEL     CLAIMID     DFHCOMMAREA
@@ -142,7 +139,6 @@ C                   CALL      'CLMINVEST'
 C                   ENDSR
 
 C*****************************************************************
-C* CLAIM SETTLEMENT
 C*****************************************************************
 C     CLMSET        BEGSR
 C                   MOVEL     CLAIMID     DFHCOMMAREA
@@ -150,7 +146,6 @@ C                   CALL      'CLMSETTLE'
 C                   ENDSR
 
 C*****************************************************************
-C* RETURN TO POLICY
 C*****************************************************************
 C     RETPOL        BEGSR
 C                   MOVEL     POLICYID    DFHCOMMAREA

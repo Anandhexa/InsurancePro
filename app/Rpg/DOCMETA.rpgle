@@ -90,7 +90,6 @@ C                   CAT       DATERECEIVED METADATATAGS
 C                   ENDSR
 
 C*****************************************************************
-C* CALL METADATA API (LOGICAL REPRESENTATION)
 C*****************************************************************
 C     CALLAPI       BEGSR
 C                   MOVEL     '{JSON PAYLOAD}' WSJSON

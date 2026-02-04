@@ -93,7 +93,6 @@ C                   MOVEL     'application/pdf' MIMETYPE
 C                   ENDSR
 
 C*****************************************************************
-C* CALL UPLOAD API (LOGICAL REPRESENTATION)
 C*****************************************************************
 C     CALLAPI       BEGSR
 C                   MOVEL     '{JSON PAYLOAD}' WSJSON

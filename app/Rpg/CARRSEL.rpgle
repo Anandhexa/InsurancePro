@@ -74,7 +74,6 @@ C                             CARRAUTH(3)
 C                   ENDSR
 
 C*****************************************************************
-C* READ SUBMISSION
 C*****************************************************************
 C     READSUBM      BEGSR
 C     WSSUBKEY      CHAIN     AXASUBM                  90

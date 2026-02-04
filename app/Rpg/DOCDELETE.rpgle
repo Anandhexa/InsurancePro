@@ -55,7 +55,6 @@ C                   EXSR      SENDMAP
 C                   RETRN
 
 C*****************************************************************
-C* READ SUBMISSION
 C*****************************************************************
 C     READSUB       BEGSR
 C     WSSUBMKEY     CHAIN     AXASUBM                 90
@@ -88,7 +87,6 @@ C                   MOVEL     '1.2MB'     WSDOCSIZE(3)
 C                   ENDSR
 
 C*****************************************************************
-C* DELETE SELECTED DOCUMENTS
 C*****************************************************************
 C     DELSEL        BEGSR
 C                   Z-ADD     0            WSDELCNT
@@ -114,7 +112,6 @@ C                   ENDIF
 C                   ENDSR
 
 C*****************************************************************
-C* DELETE DOCUMENT
 C*****************************************************************
 C     DELDOC        BEGSR
 C                   EXSR      CALLAPI
@@ -122,7 +119,6 @@ C                   EXSR      DELLOCAL
 C                   ENDSR
 
 C*****************************************************************
-C* DELETE API
 C*****************************************************************
 C     CALLAPI       BEGSR
 C                   MOVEL     '{ "documentId":"' WSJSON
@@ -138,7 +134,6 @@ C                   ENDIF
 C                   ENDSR
 
 C*****************************************************************
-C* DELETE FROM LOCAL STORAGE
 C*****************************************************************
 C     DELLOCAL      BEGSR
 C                   IF        WSHTTPSTS = 200
@@ -168,7 +163,6 @@ C                   MOVEL     WSDOCSTAT(3) STAT3O
 C                   ENDSR
 
 C*****************************************************************
-C* RETURN TO UPLOAD
 C*****************************************************************
 C     RETUPL        BEGSR
 C                   MOVEL     SUBMISSIONID DFHCOMMAREA

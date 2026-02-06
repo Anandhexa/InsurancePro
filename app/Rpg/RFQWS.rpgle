@@ -275,14 +275,6 @@
            '"header":"Authorization,' + %trim(wsAuthToken) + '"' +
            '}';
 
-         // Call HTTP POST using SQL function
-         exec sql
-           SET :sqlResponse = QSYS2.HTTP_POST(
-             :wsUwbApiUrl,
-             :wsJsonPayload,
-             :httpOptions
-           );
-
          // Check SQL status
          if sqlCode = 0;
            wsApiResponse = sqlResponse;

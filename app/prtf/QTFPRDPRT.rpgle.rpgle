@@ -1,21 +1,9 @@
-**--------------------------------------------------------------
-** Program : QTFPRDPRT
-** Purpose : Quoted Product List Print
-** Source  : QUOTEFULL logic
-**--------------------------------------------------------------
-
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-**--------------------------------------------------------------
-** Files
-**--------------------------------------------------------------
 dcl-f QUOTE     usage(*input);
 dcl-f PRODUCT   usage(*input);
 dcl-f QTFPRTF   printer;
 
-**--------------------------------------------------------------
-** Working Variables
-**--------------------------------------------------------------
 dcl-s PrintDate     char(8);
 dcl-s PrintTime     char(6);
 dcl-s EndQuoteFile  ind inz(*off);
@@ -24,9 +12,6 @@ dcl-s EndProdFile   ind inz(*off);
 dcl-s CurrProdId    char(10);
 dcl-s QuoteCount    packed(5:0);
 
-**--------------------------------------------------------------
-** Main Program
-**--------------------------------------------------------------
 exsr Initialize;
 exsr PrintHeader;
 exsr ProcessQuotedProducts;
@@ -35,9 +20,6 @@ exsr PrintFooter;
 *inlr = *on;
 return;
 
-**==============================================================
-** Initialize
-**==============================================================
 begsr Initialize;
 
    PrintDate = %char(%date():*iso0);
@@ -45,9 +27,6 @@ begsr Initialize;
 
 endsr;
 
-**==============================================================
-** Print Header
-**==============================================================
 begsr PrintHeader;
 
    RPTDATE = PrintDate;
@@ -57,9 +36,6 @@ begsr PrintHeader;
 
 endsr;
 
-**==============================================================
-** Process Quoted Products
-**==============================================================
 begsr ProcessQuotedProducts;
 
    setll *loval PRODUCT;
@@ -93,9 +69,6 @@ begsr ProcessQuotedProducts;
 
 endsr;
 
-**==============================================================
-** Count Quotes For Current Product
-**==============================================================
 begsr CountQuotesForProduct;
 
    EndQuoteFile = *off;
@@ -116,9 +89,6 @@ begsr CountQuotesForProduct;
 
 endsr;
 
-**==============================================================
-** Print Footer
-**==============================================================
 begsr PrintFooter;
 
    write FOOTER;

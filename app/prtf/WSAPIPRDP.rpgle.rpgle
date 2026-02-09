@@ -1,21 +1,9 @@
-**--------------------------------------------------------------
-** Program : WSAPIPRDP
-** Purpose : WSAPI Product List Printer
-** Style   : RPGLE Free Format
-**--------------------------------------------------------------
-
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-**--------------------------------------------------------------
-** Files
-**--------------------------------------------------------------
 dcl-f PRODUCT    usage(*input);
 dcl-f WSAPICFG   usage(*input);
 dcl-f WSAPIPRTF  printer;
 
-**--------------------------------------------------------------
-** Working Variables
-**--------------------------------------------------------------
 dcl-s PrintDate      char(8);
 dcl-s PrintTime      char(6);
 dcl-s EndProd        ind inz(*off);
@@ -24,9 +12,6 @@ dcl-s ApiEnabled     char(3);
 dcl-s ApiStatus      char(12);
 dcl-s ApiLastUpdate  char(8);
 
-**--------------------------------------------------------------
-** Main Flow
-**--------------------------------------------------------------
 exsr Initialize;
 exsr PrintHeader;
 exsr ProcessProducts;
@@ -35,9 +20,6 @@ exsr PrintFooter;
 *inlr = *on;
 return;
 
-**==============================================================
-** Initialize
-**==============================================================
 begsr Initialize;
 
    PrintDate = %char(%date():*iso0);
@@ -45,9 +27,6 @@ begsr Initialize;
 
 endsr;
 
-**==============================================================
-** Print Header
-**==============================================================
 begsr PrintHeader;
 
    PRNDATE = PrintDate;
@@ -58,9 +37,6 @@ begsr PrintHeader;
 
 endsr;
 
-**==============================================================
-** Process Products
-**==============================================================
 begsr ProcessProducts;
 
    setll *loval PRODUCT;
@@ -92,9 +68,6 @@ begsr ProcessProducts;
 
 endsr;
 
-**==============================================================
-** Read WSAPI Configuration
-**==============================================================
 begsr ReadApiConfig;
 
    clear ApiEnabled;
@@ -116,9 +89,6 @@ begsr ReadApiConfig;
 
 endsr;
 
-**==============================================================
-** Print Footer
-**==============================================================
 begsr PrintFooter;
 
    write FOOTER;

@@ -1,21 +1,9 @@
-**--------------------------------------------------------------
-** Program : WKFPRDPRT
-** Purpose : Workflow Based Product List Print
-** Source  : WORKFLOW processing
-**--------------------------------------------------------------
-
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-**--------------------------------------------------------------
-** Files
-**--------------------------------------------------------------
 dcl-f PRODUCT   usage(*input);
 dcl-f WORKFLOW  usage(*input);
 dcl-f WKFPRTF   printer;
 
-**--------------------------------------------------------------
-** Working Variables
-**--------------------------------------------------------------
 dcl-s PrintDate      char(8);
 dcl-s PrintTime      char(6);
 dcl-s EndProdFile    ind inz(*off);
@@ -26,9 +14,6 @@ dcl-s WkfStage       char(15);
 dcl-s WkfStatus      char(12);
 dcl-s LastUpdate     char(8);
 
-**--------------------------------------------------------------
-** Main Program
-**--------------------------------------------------------------
 exsr Initialize;
 exsr PrintHeader;
 exsr ProcessWorkflowProducts;
@@ -37,9 +22,6 @@ exsr PrintFooter;
 *inlr = *on;
 return;
 
-**==============================================================
-** Initialize
-**==============================================================
 begsr Initialize;
 
    PrintDate = %char(%date():*iso0);
@@ -47,9 +29,6 @@ begsr Initialize;
 
 endsr;
 
-**==============================================================
-** Print Header
-**==============================================================
 begsr PrintHeader;
 
    RPTDATE = PrintDate;
@@ -60,9 +39,6 @@ begsr PrintHeader;
 
 endsr;
 
-**==============================================================
-** Process Workflow Products
-**==============================================================
 begsr ProcessWorkflowProducts;
 
    setll *loval PRODUCT;
@@ -95,9 +71,6 @@ begsr ProcessWorkflowProducts;
 
 endsr;
 
-**==============================================================
-** Read Workflow Status for Product
-**==============================================================
 begsr ReadWorkflowStatus;
 
    clear WkfStage;
@@ -118,9 +91,6 @@ begsr ReadWorkflowStatus;
 
 endsr;
 
-**==============================================================
-** Print Footer
-**==============================================================
 begsr PrintFooter;
 
    write FOOTER;

@@ -1,27 +1,12 @@
-**--------------------------------------------------------------
-** Program : PRDPRT01
-** Purpose : Product Master List Printing
-** Type    : Printer Program
-**--------------------------------------------------------------
-
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-**--------------------------------------------------------------
-** Files
-**--------------------------------------------------------------
 dcl-f PRODUCT  usage(*input);
 dcl-f PRDPRTF  printer;
 
-**--------------------------------------------------------------
-** Working Variables
-**--------------------------------------------------------------
 dcl-s PrintDate   char(8);
 dcl-s PrintTime   char(6);
 dcl-s EndOfFile   ind inz(*off);
 
-**--------------------------------------------------------------
-** Main Program
-**--------------------------------------------------------------
 exsr Initialize;
 exsr PrintHeader;
 exsr ReadAndPrintProducts;
@@ -30,9 +15,6 @@ exsr PrintFooter;
 *inlr = *on;
 return;
 
-**==============================================================
-** Initialize
-**==============================================================
 begsr Initialize;
 
    PrintDate = %char(%date():*iso0);
@@ -40,9 +22,6 @@ begsr Initialize;
 
 endsr;
 
-**==============================================================
-** Print Report Header
-**==============================================================
 begsr PrintHeader;
 
    RPTDATE = PrintDate;
@@ -52,9 +31,6 @@ begsr PrintHeader;
 
 endsr;
 
-**==============================================================
-** Read Product File and Print Details
-**==============================================================
 begsr ReadAndPrintProducts;
 
    setll *loval PRODUCT;
@@ -79,9 +55,6 @@ begsr ReadAndPrintProducts;
 
 endsr;
 
-**==============================================================
-** Print Footer
-**==============================================================
 begsr PrintFooter;
 
    write FOOTER;

@@ -1,29 +1,14 @@
-**--------------------------------------------------------------
-** Program : POLPRT01
-** Purpose : Policy Document Printing
-** Type    : Printer Program
-**--------------------------------------------------------------
-
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-**--------------------------------------------------------------
-** Files
-**--------------------------------------------------------------
 dcl-f POLICY   usage(*input) keyed;
 dcl-f CLIENT   usage(*input) keyed;
 dcl-f PRODUCT  usage(*input) keyed;
 dcl-f POLPRTF  printer;
 
-**--------------------------------------------------------------
-** Program Parameters
-**--------------------------------------------------------------
 dcl-pi *n;
    pPolicyNo char(15);
 end-pi;
 
-**--------------------------------------------------------------
-** Working Variables
-**--------------------------------------------------------------
 dcl-s PolicyNo      char(15);
 dcl-s ClientId      char(10);
 dcl-s ProductId     char(10);
@@ -44,9 +29,6 @@ dcl-s TotalPremium  packed(11:2);
 dcl-s PrintDate     char(8);
 dcl-s PrintTime     char(6);
 
-**--------------------------------------------------------------
-** Main Flow
-**--------------------------------------------------------------
 PolicyNo = pPolicyNo;
 
 exsr Initialize;
@@ -59,9 +41,6 @@ exsr PrintPolicy;
 *inlr = *on;
 return;
 
-**==============================================================
-** Initialize
-**==============================================================
 begsr Initialize;
 
    PrintDate = %char(%date():*iso0);
@@ -69,9 +48,6 @@ begsr Initialize;
 
 endsr;
 
-**==============================================================
-** Read Policy Master
-**==============================================================
 begsr ReadPolicy;
 
    chain PolicyNo POLICY;
@@ -93,9 +69,6 @@ begsr ReadPolicy;
 
 endsr;
 
-**==============================================================
-** Read Client Details
-**==============================================================
 begsr ReadClient;
 
    chain ClientId CLIENT;
@@ -107,9 +80,6 @@ begsr ReadClient;
 
 endsr;
 
-**==============================================================
-** Read Product Details
-**==============================================================
 begsr ReadProduct;
 
    chain ProductId PRODUCT;
@@ -121,9 +91,6 @@ begsr ReadProduct;
 
 endsr;
 
-**==============================================================
-** Calculate Financial Amounts
-**==============================================================
 begsr CalculateAmounts;
 
    TaxAmount    = Premium * 0.18;
@@ -131,9 +98,6 @@ begsr CalculateAmounts;
 
 endsr;
 
-**==============================================================
-** Print Policy Document
-**==============================================================
 begsr PrintPolicy;
 
    write HEADER;

@@ -1,0 +1,26 @@
+A          R HEADER
+     A            POLDATE        8A  O  2  60
+     A            POLTIME        6A  O  2  70
+     A                                  3  2 'INSURANCE POLICY DOCUMENT'
+     A                                  4  2 '----------------------------------------'
+
+     A          R POLICYHDR
+     A            POLICYNO      15A  O  6  20
+     A            CLIENTNM      30A  O  7  20
+     A            PRODUCTNM     30A  O  8  20
+     A            STATUS        15A  O  9  20
+
+     A          R POLICYDET
+     A            STARTDT       10A  O 11  20
+     A            ENDDT         10A  O 11  50
+     A            LIMITAMT      15A  O 12  20
+     A            DEDUCTAMT     15A  O 12  50
+
+     A          R FINANCIAL
+     A            PREMIUM       15A  O 14  20
+     A            TAX           15A  O 14  50
+     A            TOTALPREM     15A  O 15  20
+
+     A          R FOOTER
+     A                                  18  2 'This policy is issued subject to terms and conditions.'
+     A                                  20  2 '*** END OF POLICY DOCUMENT ***'

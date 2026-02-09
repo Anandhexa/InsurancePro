@@ -1,0 +1,58 @@
+A*****************************************************************
+A* FILE : AXAPOLRPT
+A* DESC : Policy / Quote / Claim Detailed Report
+A*****************************************************************
+A          R RPTHEADER
+A                                      SKIPA
+A            H1TITLE       80A  O  1  1
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R POLICYR
+A                                      SPACEA(1)
+A            PLBL           15A  O  3  1
+A            POLICY_ID      15A  O  3 20
+A            PNBL           15A  O  4  1
+A            POLICY_NUMBER  20A  O  4 20
+A            INSBL          15A  O  5  1
+A            INSURED_NAME   50A  O  5 20
+A            PTBL           15A  O  6  1
+A            POLICY_TYPE    20A  O  6 20
+A            DATEBL         15A  O  7  1
+A            INCEPT_DATE    10A  O  7 20
+A            EXPBL          15A  O  7 35
+A            EXPIRY_DATE    10A  O  7 55
+A            LIMBL          15A  O  8  1
+A            POLICY_LIMIT  17P2 O  8 20
+A            PREMBL        15A  O  8 40
+A            TOTAL_PREMIUM 14P2 O  8 55
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R QUOTER
+A            QTITLE         80A  O 10  1
+A            QIDLBL         15A  O 11  1
+A            QUOTE_ID       10A  O 11 20
+A            CARRLBL        15A  O 12  1
+A            CARRIER_NAME   30A  O 12 20
+A            QAMTLBL        15A  O 13  1
+A            QUOTE_AMOUNT  14P2 O 13 20
+A            QSTATLBL       15A  O 13 40
+A            QUOTE_STATUS  15A  O 13 55
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R CLAIMHDR
+A            CLTITLE        80A  O 15  1
+
+A*****************************************************************
+A          R CLAIMR
+A            CLAIMNUM       20A  O 16  1
+A            CLAIMTYPE      20A  O 16 22
+A            LOSS_DATE      10A  O 16 45
+A            CLAIMAMT      14P2 O 16 60
+
+A*****************************************************************
+A          R RPTFOOTER
+A                                      SPACEA(2)
+A            F1MSG          80A  O 18  1

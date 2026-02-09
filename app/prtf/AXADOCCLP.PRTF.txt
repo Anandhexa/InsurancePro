@@ -1,0 +1,50 @@
+A*****************************************************************
+A* FILE : AXADOCCLP
+A* DESC : Document and Client Detail Report
+A*****************************************************************
+A          R RPTHEADER
+A                                      SKIPA
+A            TITLE        80A  O  1  1
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R CLIENTREC
+A                                      SPACEA(1)
+A            CLIDLBL      15A  O  3  1
+A            CLIENTID      8A  O  3 20
+A            CLNMLBL      15A  O  4  1
+A            CLIENTNAME   30A  O  4 20
+A            CADDLBL      15A  O  5  1
+A            CLIENTADDR   50A  O  5 20
+A            CCITYLBL     15A  O  6  1
+A            CLIENTCITY   20A  O  6 20
+A            CCNTRYLBL    15A  O  6 45
+A            CLIENTCNTRY  20A  O  6 65
+A            CPSTLBL      15A  O  7  1
+A            CLIENTPOST   10A  O  7 20
+
+A*****************************************************************
+A          R DOCHDR
+A            DOCHDRTXT    80A  O  9  1
+
+A*****************************************************************
+A          R DOCREC
+A            DOCUMENTID   10A  O 10  1
+A            SUBMISSIONID 10A  O 10 13
+A            DOCUMENTTYPE 20A  O 10 26
+A            DOCUMENTNAME 50A  O 11  1
+A            FILEPATH    100A  O 12  1
+A            FILESIZE     10S0 O 13  1
+A            UPLOADDATE   10A  O 13 15
+A            UPLOADEDBY   30A  O 13 30
+A            DOCUMENTSTATUS 15A O 14  1
+A            MIMETYPE     30A  O 14 20
+A            POLICYYEAR   15A  O 15  1
+A            CARRIERNAME  30A  O 15 20
+A            DATERECEIVED 10A  O 16  1
+A            METADATATAGS 100A O 17  1
+
+A*****************************************************************
+A          R RPTFOOT
+A                                      SPACEA(2)
+A            ENDMSG       80A  O 20  1

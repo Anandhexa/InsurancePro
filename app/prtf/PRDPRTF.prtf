@@ -1,0 +1,20 @@
+     A          R RPTHEADER
+     A            RPTDATE        8A  O  2  60
+     A            RPTTIME        6A  O  2  70
+     A                                  3  10 'PRODUCT MASTER LIST'
+     A                                  4  10 '------------------------------'
+
+     A          R COLHEADER
+     A                                  6  5 'ID'
+     A                                  6 15 'PRODUCT NAME'
+     A                                  6 45 'TYPE'
+     A                                  6 65 'STATUS'
+
+     A          R DETAIL
+     A            PRODID        10A  O  8  5
+     A            PRODNAME      30A  O  8 15
+     A            PRODTYPE      20A  O  8 45
+     A            PRODSTATUS    12A  O  8 65
+
+     A          R FOOTER
+     A                                  22 10 '*** END OF PRODUCT LIST ***'

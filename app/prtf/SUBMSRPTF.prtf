@@ -1,0 +1,23 @@
+     A          R SUBHDR
+     A            COMPANY        30A  O  2 10
+     A            REPORTTITLE    30A  O  3 10
+     A            RPTDATE         8A  O  4 10
+     A            RPTTIME         6A  O  4 30
+
+     A          R SUBCOL
+     A                                      SKIPB(2)
+     A            HD1            15A  O  6  5
+     A            HD2            15A  O  6 25
+     A            HD3            15A  O  6 45
+     A            HD4            15A  O  6 65
+
+     A          R SUBDTL
+     A                                      SPACEB(1)
+     A            SUBMID         15A  O  8  5
+     A            CLIENTID       15A  O  8 25
+     A            STATUS         15A  O  8 45
+     A            SUBREF         20A  O  8 65
+
+     A          R SUBFTR
+     A                                      SKIPB(2)
+     A            FOOTER         50A  O 12 10

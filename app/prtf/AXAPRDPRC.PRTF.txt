@@ -1,0 +1,46 @@
+A*****************************************************************
+A* FILE : AXAPRDPRC
+A* DESC : Product and Pricing Detail Report
+A*****************************************************************
+A          R RPTHEADER
+A                                      SKIPA
+A            TITLE        80A  O  1  1
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R PRODUCTR
+A                                      SPACEA(1)
+A            PIDLBL       15A  O  3  1
+A            PRODUCT_ID   10A  O  3 20
+A            PNAMELBL     15A  O  4  1
+A            PRODUCT_NAME 30A  O  4 20
+A            PTYPLBL      15A  O  5  1
+A            PRODUCT_TYPE 20A  O  5 20
+A            LIMLBL       15A  O  6  1
+A            COVERAGE_LIMIT 14P2 O 6 20
+A            DEDLBL       15A  O  6 40
+A            DEDUCTIBLE   12P2 O  6 55
+A            PREMLBL      15A  O  7  1
+A            PREMIUM      12P2 O  7 20
+A            PSTSLBL      15A  O  7 40
+A            PRODUCT_STATUS 10A O 7 55
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R PRCHDR
+A            PRCHDRTXT    80A  O  9  1
+
+A*****************************************************************
+A          R PRICINGR
+A            PRICING_ID   10A  O 10  1
+A            RISK_CATEGORY 15A O 10 13
+A            BASE_RATE     5P2 O 10 30
+A            RISK_MULTIPLIER 3P2 O 10 40
+A            COMMISSION_RATE 4P2 O 10 48
+A            MIN_PREMIUM  12P2 O 10 55
+A            MAX_PREMIUM  14P2 O 10 70
+
+A*****************************************************************
+A          R RPTFOOTER
+A                                      SPACEA(2)
+A            ENDMSG       80A  O 12  1

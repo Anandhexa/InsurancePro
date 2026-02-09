@@ -1,0 +1,20 @@
+     A          R RPTHEADER
+     A            RPTDATE        8A  O  2  60
+     A            RPTTIME        6A  O  2  70
+     A                                  3  10 'QUOTED PRODUCT LIST'
+     A                                  4  10 '------------------------------'
+
+     A          R COLHEADER
+     A                                  6  5 'PRODUCT ID'
+     A                                  6 20 'PRODUCT NAME'
+     A                                  6 55 'QUOTE COUNT'
+     A                                  6 70 'STATUS'
+
+     A          R DETAIL
+     A            PRODID        10A  O  8  5
+     A            PRODNAME      30A  O  8 20
+     A            QUOTECNT       5P 0O  8 55
+     A            PRODSTATUS    12A  O  8 70
+
+     A          R FOOTER
+     A                                  22 10 '*** END OF QUOTED PRODUCT LIST ***'

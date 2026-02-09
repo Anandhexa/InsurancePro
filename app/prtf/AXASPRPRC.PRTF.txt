@@ -1,0 +1,78 @@
+A*****************************************************************
+A* FILE : AXASPRPRC
+A* DESC : Submission / Product / Pricing Detail Report
+A*****************************************************************
+A          R RPTHEADER
+A                                      SKIPA
+A            TITLE        80A  O  1  1
+A                                      SPACEA(1)
+
+A*****************************************************************
+A          R SUBMR
+A                                      SPACEA(1)
+A            SUBMIDL      15A  O  3  1
+A            SUBMISSION_ID 10A O  3 20
+A            SUBDTL       15A  O  4  1
+A            SUBMISSION_DATE 10A O 4 20
+A            VALLBL       15A  O  4 40
+A            VALID_UNTIL_DATE 10A O 4 55
+A            BROKLBL      15A  O  5  1
+A            BROKER_REF   20A  O  5 20
+A            SUBSTL       15A  O  5 45
+A            SUBMISSION_STATUS 10A O 5 65
+A            WFLBL        15A  O  6  1
+A            WORKFLOW_STATE 20A O 6 20
+A            ASGLBL       15A  O  6 45
+A            ASSIGNED_USER 30A O 6 65
+A            PRILBL       15A  O  7  1
+A            PRIORITY_LEVEL 10A O 7 20
+A            VALLBL2      15A  O  7 45
+A            VALIDATION_SCORE 3P0 O 7 65
+A            BUSLBL       15A  O  8  1
+A            BUSINESS_RULE_STATUS 15A O 8 20
+A            SLALBL       15A  O  8 45
+A            SLA_DUE_DATE 10A  O  8 65
+A            ESCLBL       15A  O  9  1
+A            ESCALATION_FLAG 1A O 9 20
+A            CRTLBL       15A  O  9 45
+A            CREATED_BY  30A  O  9 65
+
+A*****************************************************************
+A          R PRODR
+A                                      SPACEA(1)
+A            PIDLBL       15A  O 11  1
+A            PRODUCT_ID   10A  O 11 20
+A            PNAMLBL      15A  O 12  1
+A            PRODUCT_NAME 30A  O 12 20
+A            PTYPLBL      15A  O 13  1
+A            PRODUCT_TYPE 20A  O 13 20
+A            LIMLBL       15A  O 14  1
+A            COVERAGE_LIMIT 14P2 O 14 20
+A            DEDLBL       15A  O 14 40
+A            DEDUCTIBLE   12P2 O 14 55
+A            PREMLBL      15A  O 15  1
+A            PREMIUM      12P2 O 15 20
+A            PSTSLBL      15A  O 15 40
+A            PRODUCT_STATUS 10A O 15 55
+
+A*****************************************************************
+A          R PRCHDR
+A            PRCHDRTXT    80A  O 17  1
+
+A*****************************************************************
+A          R PRICER
+A            PRICING_ID   10A  O 18  1
+A            RISK_CATEGORY 15A O 18 13
+A            BASE_RATE     5P2 O 18 32
+A            RISK_MULTIPLIER 3P2 O 18 40
+A            COMMISSION_RATE 4P2 O 18 48
+A            MIN_PREMIUM  12P2 O 18 55
+A            MAX_PREMIUM  14P2 O 18 70
+A            EFFECTIVE_DATE 10A O 19  1
+A            EXPIRY_DATE  10A O 19 13
+A            PRICING_STATUS 10A O 19 26
+
+A*****************************************************************
+A          R RPTFOOT
+A                                      SPACEA(2)
+A            ENDMSG       80A  O 22  1

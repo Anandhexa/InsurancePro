@@ -55,14 +55,6 @@ dow not %eof(AXAPOLICY);
 
    /* Claims for Policy */
    setll POLICY.POLICY_ID AXACLAIM;
-   reade POLICY.POLICY_ID AXACLAIM;
-   if %found(AXACLAIM);
-      write CLAIMHDR;
-      dow %found(AXACLAIM);
-         write CLAIMR;
-         reade POLICY.POLICY_ID AXACLAIM;
-      enddo;
-   endif;
 
    read AXAPOLICY;
 enddo;

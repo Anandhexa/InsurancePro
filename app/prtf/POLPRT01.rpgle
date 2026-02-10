@@ -2,7 +2,7 @@ ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
 dcl-f POLICY   usage(*input) keyed;
 dcl-f CLIENT   usage(*input) keyed;
-dcl-f PRODUCT  usage(*input) keyed;
+dcl-f AXAPROD  usage(*input) keyed;
 dcl-f POLPRTF  printer;
 
 dcl-pi *n;
@@ -82,9 +82,9 @@ endsr;
 
 begsr ReadProduct;
 
-   chain ProductId PRODUCT;
-   if %found(PRODUCT);
-      ProductName = PRODUCT.PRODUCT_NAME;
+   chain ProductId AXAPROD;
+   if %found(AXAPROD);
+      ProductName = AXAPROD.PRODUCT_NAME;
    else;
       ProductName = 'UNKNOWN PRODUCT';
    endif;

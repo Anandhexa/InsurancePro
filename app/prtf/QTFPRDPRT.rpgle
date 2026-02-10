@@ -1,7 +1,7 @@
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
 dcl-f QUOTE     usage(*input);
-dcl-f PRODUCT   usage(*input);
+dcl-f AXAPROD   usage(*input);
 dcl-f QTFPRTF   printer;
 
 dcl-s PrintDate     char(8);
@@ -38,26 +38,26 @@ endsr;
 
 begsr ProcessQuotedProducts;
 
-   setll *loval PRODUCT;
+   setll *loval AXAPROD;
 
    dow EndProdFile = *off;
 
-      read PRODUCT;
-      if %eof(PRODUCT);
+      read AXAPROD;
+      if %eof(AXAPROD);
          EndProdFile = *on;
       else;
 
-         CurrProdId = PRODUCT.PRODUCT_ID;
+         CurrProdId = AXAPROD.PRODUCT_ID;
          QuoteCount = 0;
 
          exsr CountQuotesForProduct;
 
          if QuoteCount > 0;
 
-            PRODID     = PRODUCT.PRODUCT_ID;
-            PRODNAME   = PRODUCT.PRODUCT_NAME;
+            PRODID     = AXAPROD.PRODUCT_ID;
+            PRODNAME   = AXAPROD.PRODUCT_NAME;
             QUOTECNT   = QuoteCount;
-            PRODSTATUS = PRODUCT.PRODUCT_STATUS;
+            PRODSTATUS = AXAPROD.PRODUCT_STATUS;
 
             write DETAIL;
 

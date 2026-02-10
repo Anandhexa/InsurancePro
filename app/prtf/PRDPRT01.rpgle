@@ -1,6 +1,6 @@
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-dcl-f PRODUCT  usage(*input);
+dcl-f AXAPROD  usage(*input);
 dcl-f PRDPRTF  printer;
 
 dcl-s PrintDate   char(8);
@@ -33,19 +33,19 @@ endsr;
 
 begsr ReadAndPrintProducts;
 
-   setll *loval PRODUCT;
+   setll *loval AXAPROD;
 
    dow EndOfFile = *off;
 
-      read PRODUCT;
-      if %eof(PRODUCT);
+      read AXAPROD;
+      if %eof(AXAPROD);
          EndOfFile = *on;
       else;
 
-         PRODID     = PRODUCT.PRODUCT_ID;
-         PRODNAME   = PRODUCT.PRODUCT_NAME;
-         PRODTYPE   = PRODUCT.PRODUCT_TYPE;
-         PRODSTATUS = PRODUCT.PRODUCT_STATUS;
+         PRODID     = AXAPROD.PRODUCT_ID;
+         PRODNAME   = AXAPROD.PRODUCT_NAME;
+         PRODTYPE   = AXAPROD.PRODUCT_TYPE;
+         PRODSTATUS = AXAPROD.PRODUCT_STATUS;
 
          write DETAIL;
 

@@ -1,6 +1,6 @@
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-dcl-f PRODUCT    usage(*input);
+dcl-f AXAPROD    usage(*input);
 dcl-f WSAPICFG   usage(*input);
 dcl-f WSAPIPRTF  printer;
 
@@ -39,12 +39,12 @@ endsr;
 
 begsr ProcessProducts;
 
-   setll *loval PRODUCT;
+   setll *loval AXAPROD;
 
    dow EndProd = *off;
 
-      read PRODUCT;
-      if %eof(PRODUCT);
+      read AXAPROD;
+      if %eof(AXAPROD);
          EndProd = *on;
       else;
 
@@ -52,8 +52,8 @@ begsr ProcessProducts;
 
          if ApiEnabled = 'YES';
 
-            PRODID   = PRODUCT.PRODUCT_ID;
-            PRODNAME = PRODUCT.PRODUCT_NAME;
+            PRODID   = AXAPROD.PRODUCT_ID;
+            PRODNAME = AXAPROD.PRODUCT_NAME;
             APIENB   = ApiEnabled;
             APISTS   = ApiStatus;
             LASTUPD  = ApiLastUpdate;
@@ -74,7 +74,7 @@ begsr ReadApiConfig;
    clear ApiStatus;
    clear ApiLastUpdate;
 
-   chain PRODUCT.PRODUCT_ID WSAPICFG;
+   chain AXAPROD.PRODUCT_ID WSAPICFG;
    if %found(WSAPICFG);
 
       ApiEnabled    = 'YES';

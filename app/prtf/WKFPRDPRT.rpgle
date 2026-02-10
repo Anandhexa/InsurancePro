@@ -1,6 +1,6 @@
 ctl-opt dftactgrp(*no) actgrp('INSURANCE');
 
-dcl-f PRODUCT   usage(*input);
+dcl-f AXAPROD   usage(*input);
 dcl-f WORKFLOW  usage(*input);
 dcl-f WKFPRTF   printer;
 
@@ -41,22 +41,22 @@ endsr;
 
 begsr ProcessWorkflowProducts;
 
-   setll *loval PRODUCT;
+   setll *loval AXAPROD;
 
    dow EndProdFile = *off;
 
-      read PRODUCT;
-      if %eof(PRODUCT);
+      read AXAPROD;
+      if %eof(AXAPROD);
          EndProdFile = *on;
       else;
 
-         CurrProdId = PRODUCT.PRODUCT_ID;
+         CurrProdId = AXAPROD.PRODUCT_ID;
          exsr ReadWorkflowStatus;
 
          if %len(%trim(WkfStage)) > 0;
 
-            PRODID    = PRODUCT.PRODUCT_ID;
-            PRODNAME  = PRODUCT.PRODUCT_NAME;
+            PRODID    = AXAPROD.PRODUCT_ID;
+            PRODNAME  = AXAPROD.PRODUCT_NAME;
             WKFSTAGE  = WkfStage;
             WKFSTATUS = WkfStatus;
             LASTUPD   = LastUpdate;

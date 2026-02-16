@@ -1,94 +1,78 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+H*****************************************************************
+H* Program : DOCGEN
+H* Purpose : Generate and print submission document
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-dcl-f DOCGEN     workstn;
-dcl-f DOCGENPRT  printer;
-dcl-f AXASUBM    usage(*input) keyed;
-dcl-f AXAPROD    usage(*input) keyed;
-dcl-f AXAPLCMT   usage(*input) keyed;
+F*****************************************************************
+F* Files (CICS / VSAM Equivalents)
+F*****************************************************************
+FDOCGEN    CF   E             WORKSTN
+FAXASUBM   IF   E           K DISK
+FAXAPROD   IF   E           K DISK
+FAXAPLCMT  IF   E           K DISK
 
-dcl-s SubmissionKey char(10);
-dcl-s BrokerEmail char(30) inz('RGARCIA@AXAINSURANCE.COM');
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY SUBMISSN
+I/COPY PRODUCT
+I/COPY PLACEMENT
+I/COPY CLIENT
 
-dcl-pi *n;
-   pSubmissionKey char(10);
-end-pi;
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSSUBMKEY      S 10
+I             WSBROKMAIL     S 30 INZ('RGARCIA@AXAINSURANCE.COM')
 
-SubmissionKey = pSubmissionKey;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
-// ---------------------------------
-// Read Submission
-// ---------------------------------
-chain SubmissionKey AXASUBM;
-if not %found;
-   *inlr = *on;
-   return;
-endif;
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   MOVEL     DFHCOMMAREA WSSUBMKEY
+C                   EXSR      READSUB
+C                   EXSR      SENDMAP
+C                   RETRN
 
-// PRODUCT-ID comes from submission record
-chain PRODUCT_ID AXAPROD;
+C*****************************************************************
+C*****************************************************************
+C     READSUB       BEGSR
+C     WSSUBMKEY     CHAIN     AXASUBM                 90
+C                   IF        *IN90 = *OFF
+C     PRODUCTID     CHAIN     AXAPROD                 91
+C     PLACEMENTID   CHAIN     AXAPLCMT                92
+C                   ENDIF
+C                   ENDSR
 
-// PLACEMENT-ID comes from submission record
-chain PLACEMENT_ID AXAPLCMT;
+C*****************************************************************
+C* SEND MAP
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     PLACEMENTNAME INSNAMEO
+C                   MOVEL     WSBROKMAIL   BRKEMAILO
+C                   MOVEL     PRODUCTNAME PRODNMO
+C                   MOVEL     'NEW BUSINESS' BIZTYPEO
+C                   MOVEL     SUBMISSIONDATE INCEPDTO
+C                   MOVEL     VALIDUNTILDATE EXPIRDTO
+C                   MOVEL     COVERAGELIMIT PROGLMTO
+C                   ENDSR
 
+C*****************************************************************
+C*****************************************************************
+C     PRINTDOC      BEGSR
+C                   MOVEL     DOCMAP       WSRESPONSE
+C                   ENDSR
 
-// ---------------------------------
-// Load screen fields
-// ---------------------------------
-INSNAME  = PLACEMENT_NAME;
-BRKEMAIL = BrokerEmail;
-PRODNM   = PRODUCT_NAME;
-BIZTYPE  = 'NEW BUSINESS';
-INCEPDT  = SUBMISSION_DATE;
-EXPIRDT  = VALID_UNTIL_DATE;
-PROGLMT  = COVERAGE_LIMIT;
-
-
-// ---------------------------------
-// Main Screen Loop
-// ---------------------------------
-dow '1' = '1';
-
-   exfmt DOCMAP;
-
-   if *in03;   // PF3 = Back
-      callp ReturnSubmission();
-      leave;
-   endif;
-
-   if *in12;   // PF12 = Print
-      callp PrintDocument();
-   endif;
-
-enddo;
-
-*inlr = *on;
-return;
-
-
-// =================================
-// Print Routine
-// =================================
-dcl-proc PrintDocument;
-
-   PINSNAME  = INSNAME;
-   PBRKEMAIL = BRKEMAIL;
-   PPRODNM   = PRODNM;
-   PBIZTYPE  = BIZTYPE;
-   PINCEPDT  = INCEPDT;
-   PEXPIRDT  = EXPIRDT;
-   PPROGLMT  = PROGLMT;
-
-   write PRINTREC;
-
-end-proc;
-
-
-// =================================
-// Return to Submission Program
-// =================================
-dcl-proc ReturnSubmission;
-
-   call 'SUBMISSN' (SubmissionKey);
-
-end-proc;
+C*****************************************************************
+C*****************************************************************
+C     RETSUB        BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'SUBMISSN'
+C                   ENDSR

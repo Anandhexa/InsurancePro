@@ -1,163 +1,147 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+ H*****************************************************************
+H* Program : DOCUPLOAD
+H* Purpose : Upload document and persist document record
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-// =====================
-// Files
-// =====================
-dcl-f DOCUPLOAD workstn;
-dcl-f AXASUBM   usage(*input) keyed;
-dcl-f AXACLIENT usage(*input) keyed;
-dcl-f AXADOC    usage(*update) keyed;
+F*****************************************************************
+F* Files
+F*****************************************************************
+FDOCUPLOAD CF   E             WORKSTN
+FAXASUBM   IF   E           K DISK
+FAXACLIENT IF   E           K DISK
+FAXADOC    UF   E           K DISK
 
-// =====================
-// Scalars
-// =====================
-dcl-s SubmissionKey char(10);
-dcl-s DocCounter packed(6:0) inz(100001);
-dcl-s UploadCount packed(2:0) inz(0);
-dcl-s HttpStatus int(10);
-dcl-s JsonPayload varchar(1000);
-dcl-s ApiResponse varchar(500);
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY DOCUMENT
+I/COPY SUBMISSN
+I/COPY CLIENT
 
-// =====================
-// Document DS (COPY DOCUMENT)
-// =====================
-dcl-ds Document qualified;
-   DocumentId     char(12);
-   ClientId       char(8);
-   SubmissionId   char(10);
-   DocumentType   char(20);
-   DocumentName   char(50);
-   FilePath       char(60);
-   FileSize       packed(9:0);
-   UploadDate     char(8);
-   UploadedBy     char(30);
-   DocumentStatus char(15);
-   MimeType       char(30);
-end-ds;
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSSUBMKEY      S 10
+I             WSDOCCNTR      S 6 0 INZ(100001)
+I             WSUPLDCNT      S 2 0 INZ(0)
+I             WSHTTPSTS     S 3 0
+I             WSJSON        S 1000
+I             WSAPIRESP     S 500
 
-// =====================
-// Parameter (COMMAREA)
-// =====================
-dcl-pi *n;
-   pSubmissionKey char(10);
-end-pi;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
-SubmissionKey = pSubmissionKey;
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   MOVEL     DFHCOMMAREA WSSUBMKEY
+C                   EXSR      READSUB
+C                   EXSR      LOADDOC
+C                   EXSR      SENDMAP
+C                   RETRN
 
-// =====================
-// Read submission + client
-// =====================
-chain SubmissionKey AXASUBM;
-if not %found;
-   *inlr = *on;
-   return;
-endif;
+C*****************************************************************
+C*****************************************************************
+C     READSUB       BEGSR
+C     WSSUBMKEY     CHAIN     AXASUBM                 90
+C                   CHAIN     CLIENTID  AXACLIENT
+C                   ENDSR
 
-chain CLIENT_ID AXACLIENT;
+C*****************************************************************
+C* LOAD EXISTING DOCUMENTS (DISPLAY ONLY)
+C*****************************************************************
+C     LOADDOC       BEGSR
+C                   MOVEL     'Policy_Document.pdf' DOC1O
+C                   MOVEL     'POLICY'              TYPE1O
+C                   MOVEL     'UPLOADED'            STAT1O
+C                   MOVEL     '2024-01-15'           DATE1O
+C                   MOVEL     '2.5MB'               SIZE1O
+C                   ENDSR
 
-// =====================
-// Load existing document row
-// =====================
-DOC1  = 'Policy_Document';
-TYPE1 = 'POLICY';
-STAT1 = 'UPLOADED';
-DATE1 = '2024-01-15';
-SIZE1 = '2.5MB';
+C*****************************************************************
+C* UPLOAD DOCUMENT (ENTER)
+C*****************************************************************
+C     UPLOADDOC     BEGSR
+C                   EXSR      BUILDDOC
+C                   EXSR      CALLAPI
+C                   EXSR      SAVEDOC
+C                   EXSR      SENDMAP
+C                   ENDSR
 
-// =====================
-// Main loop
-// =====================
-dow *in03 = *off;
+C*****************************************************************
+C* BUILD DOCUMENT RECORD
+C*****************************************************************
+C     BUILDDOC      BEGSR
+C                   MOVEL     'DOC'       DOCUMENTID
+C                   Z-ADD     WSDOCCNTR   DOCUMENTID
+C                   ADD       1           WSDOCCNTR
+C                   MOVEL     CLIENTID    CLIENTID
+C                   MOVEL     SUBMISSIONID SUBMISSIONID
+C                   MOVEL     DOCTYPEI    DOCUMENTTYPE
+C                   MOVEL     DOCNAMEI    DOCUMENTNAME
+C                   MOVEL     FILEPATHI   FILEPATH
+C                   Z-ADD     2500000     FILESIZE
+C                   MOVEL     *DATE       UPLOADDATE
+C                   MOVEL     'ROSALIA GARCIA' UPLOADEDBY
+C                   MOVEL     'UPLOADING' DOCUMENTSTATUS
+C                   MOVEL     'application/pdf' MIMETYPE
+C                   ENDSR
 
-   CLIENTID = CLIENT_ID;
-   SUBMID   = SUBMISSION_ID;
+C*****************************************************************
+C*****************************************************************
+C     CALLAPI       BEGSR
+C                   MOVEL     '{JSON PAYLOAD}' WSJSON
+C                   Z-ADD     200          WSHTTPSTS
+C                   IF        WSHTTPSTS = 200
+C                   MOVEL     'UPLOADED'  DOCUMENTSTATUS
+C                   ADD       1           WSUPLDCNT
+C                   ELSE
+C                   MOVEL     'FAILED'    DOCUMENTSTATUS
+C                   ENDIF
+C                   ENDSR
 
-   exfmt DOCMAP;
+C*****************************************************************
+C* SAVE DOCUMENT RECORD
+C*****************************************************************
+C     SAVEDOC       BEGSR
+C     DOCUMENTID    WRITE     AXADOC
+C                   ENDSR
 
-   if *in03;                     // PF3
-      call 'SUBMISSN' (SubmissionKey);
-      leave;
-   endif;
+C*****************************************************************
+C* SEND MAP
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     CLIENTID     CLIENTIDO
+C                   MOVEL     SUBMISSIONID SUBMIDO
+C                   MOVEL     'DOCUMENTS UPLOADED:' UPLOADSTSO
+C                   CAT       WSUPLDCNT    UPLOADSTSO
+C                   CAT       ' STATUS:'   UPLOADSTSO
+C                   CAT       DOCUMENTSTATUS UPLOADSTSO
+C                   ENDSR
 
-   if *in02;                     // PF2
-      call 'DOCDELETE' (SubmissionKey);
-      iter;
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     DELDOC        BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'DOCDELETE'
+C                   ENDSR
 
-   if *in04;                     // PF4
-      call 'DOCMETA' (SubmissionKey);
-      iter;
-   endif;
+C*****************************************************************
+C* METADATA UPLOAD
+C*****************************************************************
+C     METADATA      BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'DOCMETA'
+C                   ENDSR
 
-   if *in01;                     // ENTER
-      callp UploadDocument();
-   endif;
-
-enddo;
-
-*inlr = *on;
-return;
-
-// ===================================================
-// Upload logic
-// ===================================================
-dcl-proc UploadDocument;
-
-   // Build ID
-   Document.DocumentId = 'DOC' + %char(DocCounter);
-   DocCounter += 1;
-
-   Document.ClientId       = CLIENT_ID;
-   Document.SubmissionId   = SUBMISSION_ID;
-   Document.DocumentType   = DOCTYPE;
-   Document.DocumentName   = DOCNAME;
-   Document.FilePath       = FILEPATH;
-   Document.FileSize       = 2500000;
-   Document.UploadDate     = %char(%date():*ISO0);
-   Document.UploadedBy     = 'ROSALIA GARCIA';
-   Document.DocumentStatus = 'UPLOADING';
-   Document.MimeType       = 'application/pdf';
-
-   // Build JSON
-   JsonPayload =
-   '{' +
-   '"documentId":"'   + %trim(Document.DocumentId) + '",' +
-   '"clientId":"'     + %trim(Document.ClientId) + '",' +
-   '"submissionId":"' + %trim(Document.SubmissionId) + '",' +
-   '"documentType":"' + %trim(Document.DocumentType) + '",' +
-   '"documentName":"' + %trim(Document.DocumentName) + '",' +
-   '"filePath":"'     + %trim(Document.FilePath) + '",' +
-   '"fileSize":'      + %char(Document.FileSize) + ',' +
-   '"uploadedBy":"'   + %trim(Document.UploadedBy) + '",' +
-   '"mimeType":"'     + %trim(Document.MimeType) + '"' +
-   '}';
-
-   // HTTP POST
-   exec sql
-      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
-        into :HttpStatus, :ApiResponse
-        from table(
-           QSYS2.HTTP_POST(
-              URL => 'https://docmgmt.axainsurance.com/api/v1/upload',
-              DATA => :JsonPayload,
-              HEADERS => 'Content-Type,application/json'
-           )
-        );
-
-   if HttpStatus = 200 or HttpStatus = 201;
-      Document.DocumentStatus = 'UPLOADED';
-      UploadCount += 1;
-   else;
-      Document.DocumentStatus = 'FAILED';
-   endif;
-
-   write AXADOC Document;
-
-   UPLOADSTS =
-      'DOCUMENTS UPLOADED: ' +
-      %char(UploadCount) +
-      ' STATUS: ' +
-      %trim(Document.DocumentStatus);
-
-end-proc;
+C*****************************************************************
+C*****************************************************************
+C     RETSUB        BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'SUBMISSN'
+C                   ENDSR

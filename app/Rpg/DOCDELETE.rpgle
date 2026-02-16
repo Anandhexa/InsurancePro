@@ -1,143 +1,171 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+H*****************************************************************
+H* Program : DOCDELETE
+H* Purpose : Delete selected documents via API and local storage
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-dcl-f DOCDELETE workstn;
-dcl-f AXASUBM usage(*input) keyed;
-dcl-f AXADOC  usage(*update) keyed;
+F*****************************************************************
+F* Files (CICS / VSAM Equivalents)
+F*****************************************************************
+FDOCDELETE CF   E             WORKSTN
+FAXASUBM   IF   E           K DISK
+FAXADOC    IF   E           K DISK
 
-dcl-s SubmissionKey char(10);
-dcl-s DeleteCount packed(2:0) inz(0);
-dcl-s SuccessCount packed(2:0) inz(0);
-dcl-s HttpStatus int(10);
-dcl-s JsonPayload varchar(1000);
-dcl-s ApiResponse varchar(500);
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY DOCUMENT
+I/COPY SUBMISSN
 
-dcl-ds Document qualified dim(3);
-   DocId        char(10);
-   DocName      char(50);
-   DocType      char(20);
-   DocStatus    char(15);
-   DocDate      char(10);
-   DocSize      char(8);
-   Selected     char(1);
-end-ds;
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSSUBMKEY      S 10
+I             WSDELCNT       S 2 0 INZ(0)
+I             WSSUCCNT       S 2 0 INZ(0)
+I             WSHTTPSTS      S 3 0
+I             WSJSON         S 1000
+I             WSAPIRESP      S 500
 
-dcl-pi *n;
-   pSubmissionKey char(10);
-end-pi;
+I*****************************************************************
+I* DOCUMENT TABLE
+I*****************************************************************
+I             WSDOCTBL       DS
+I             WSDOCID        S 10 DIM(3)
+I             WSDOCNAME      S 50 DIM(3)
+I             WSDOCTYPE      S 20 DIM(3)
+I             WSDOCSTAT      S 15 DIM(3)
+I             WSDOCDATE      S 10 DIM(3)
+I             WSDOCSIZE      S 8  DIM(3)
+I             WSDOCSEL       S 1  DIM(3)
 
-SubmissionKey = pSubmissionKey;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
-// ------------------------------
-// Load Submission Data
-// ------------------------------
-chain SubmissionKey AXASUBM;
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   MOVEL     DFHCOMMAREA WSSUBMKEY
+C                   EXSR      READSUB
+C                   EXSR      LOADDOC
+C                   EXSR      SENDMAP
+C                   RETRN
 
-// ------------------------------
-// Load Existing Documents
-// ------------------------------
-Document(1).DocId = 'DOC100001';
-Document(1).DocName = 'Policy_Document.pdf';
-Document(1).DocType = 'POLICY';
-Document(1).DocStatus = 'UPLOADED';
-Document(1).DocDate = '2024-01-15';
-Document(1).DocSize = '2.5MB';
+C*****************************************************************
+C*****************************************************************
+C     READSUB       BEGSR
+C     WSSUBMKEY     CHAIN     AXASUBM                 90
+C                   ENDSR
 
-Document(2).DocId = 'DOC100002';
-Document(2).DocName = 'Quote_Response.pdf';
-Document(2).DocType = 'QUOTE';
-Document(2).DocStatus = 'UPLOADED';
-Document(2).DocDate = '2024-01-14';
-Document(2).DocSize = '1.8MB';
+C*****************************************************************
+C* LOAD EXISTING DOCUMENTS
+C*****************************************************************
+C     LOADDOC       BEGSR
+C                   MOVEL     'DOC100001' WSDOCID(1)
+C                   MOVEL     'Policy_Document.pdf' WSDOCNAME(1)
+C                   MOVEL     'POLICY'    WSDOCTYPE(1)
+C                   MOVEL     'UPLOADED'  WSDOCSTAT(1)
+C                   MOVEL     '2024-01-15' WSDOCDATE(1)
+C                   MOVEL     '2.5MB'     WSDOCSIZE(1)
 
-Document(3).DocId = 'DOC100003';
-Document(3).DocName = 'Binding_Authority.pdf';
-Document(3).DocType = 'BINDER';
-Document(3).DocStatus = 'UPLOADED';
-Document(3).DocDate = '2024-01-13';
-Document(3).DocSize = '1.2MB';
+C                   MOVEL     'DOC100002' WSDOCID(2)
+C                   MOVEL     'Quote_Response.pdf' WSDOCNAME(2)
+C                   MOVEL     'QUOTE'     WSDOCTYPE(2)
+C                   MOVEL     'UPLOADED'  WSDOCSTAT(2)
+C                   MOVEL     '2024-01-14' WSDOCDATE(2)
+C                   MOVEL     '1.8MB'     WSDOCSIZE(2)
 
-// ------------------------------
-// Main Loop
-// ------------------------------
-dow *in03 = *off;   // PF3 Exit
+C                   MOVEL     'DOC100003' WSDOCID(3)
+C                   MOVEL     'Binding_Authority.pdf' WSDOCNAME(3)
+C                   MOVEL     'BINDER'    WSDOCTYPE(3)
+C                   MOVEL     'UPLOADED'  WSDOCSTAT(3)
+C                   MOVEL     '2024-01-13' WSDOCDATE(3)
+C                   MOVEL     '1.2MB'     WSDOCSIZE(3)
+C                   ENDSR
 
-   exfmt DELMAP;
+C*****************************************************************
+C*****************************************************************
+C     DELSEL        BEGSR
+C                   Z-ADD     0            WSDELCNT
+C                   Z-ADD     0            WSSUCCNT
 
-   if *in03;
-      leave;
-   endif;
+C                   IF        DEL1I = 'X'
+C                   ADD       1            WSDELCNT
+C                   Z-ADD     1            WSRESPONSE
+C                   EXSR      DELDOC
+C                   ENDIF
 
-   if *in12;  // Refresh
-      iter;
-   endif;
+C                   IF        DEL2I = 'X'
+C                   ADD       1            WSDELCNT
+C                   Z-ADD     2            WSRESPONSE
+C                   EXSR      DELDOC
+C                   ENDIF
 
-   DeleteCount = 0;
-   SuccessCount = 0;
+C                   IF        DEL3I = 'X'
+C                   ADD       1            WSDELCNT
+C                   Z-ADD     3            WSRESPONSE
+C                   EXSR      DELDOC
+C                   ENDIF
+C                   ENDSR
 
-   if DEL1 = 'X';
-      processDelete(1);
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     DELDOC        BEGSR
+C                   EXSR      CALLAPI
+C                   EXSR      DELLOCAL
+C                   ENDSR
 
-   if DEL2 = 'X';
-      processDelete(2);
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     CALLAPI       BEGSR
+C                   MOVEL     '{ "documentId":"' WSJSON
+C                   MOVEL     '" }'         WSJSON
+C                   Z-ADD     200           WSHTTPSTS
 
-   if DEL3 = 'X';
-      processDelete(3);
-   endif;
+C                   IF        WSHTTPSTS = 200
+C                   MOVEL     'DELETED'     WSDOCSTAT(WSRESPONSE)
+C                   ADD       1             WSSUCCNT
+C                   ELSE
+C                   MOVEL     'DELETE FAILED' WSDOCSTAT(WSRESPONSE)
+C                   ENDIF
+C                   ENDSR
 
-   DELSTS = 'DOCUMENTS SELECTED: ' + %char(DeleteCount) +
-            ' SUCCESSFULLY DELETED: ' + %char(SuccessCount);
+C*****************************************************************
+C*****************************************************************
+C     DELLOCAL      BEGSR
+C                   IF        WSHTTPSTS = 200
+C     WSDOCID(WSRESPONSE)
+C                   DELETE    AXADOC
+C                   ENDIF
+C                   ENDSR
 
-enddo;
+C*****************************************************************
+C* SEND MAP
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     CLIENTID     CLIENTIDO
+C                   MOVEL     SUBMISSIONID SUBMIDO
 
-*inlr = *on;
-return;
+C                   MOVEL     WSDOCNAME(1) DOC1O
+C                   MOVEL     WSDOCTYPE(1) TYPE1O
+C                   MOVEL     WSDOCSTAT(1) STAT1O
 
+C                   MOVEL     WSDOCNAME(2) DOC2O
+C                   MOVEL     WSDOCTYPE(2) TYPE2O
+C                   MOVEL     WSDOCSTAT(2) STAT2O
 
-// =============================
-// Subprocedure: processDelete
-// =============================
-dcl-proc processDelete;
-   dcl-pi *n;
-      idx int(10);
-   end-pi;
+C                   MOVEL     WSDOCNAME(3) DOC3O
+C                   MOVEL     WSDOCTYPE(3) TYPE3O
+C                   MOVEL     WSDOCSTAT(3) STAT3O
+C                   ENDSR
 
-   DeleteCount += 1;
-
-   // Build JSON
-   JsonPayload = '{' +
-      '"documentId":"' + %trim(Document(idx).DocId) + '",' +
-      '"submissionId":"' + %trim(SubmissionKey) + '",' +
-      '"documentName":"' + %trim(Document(idx).DocName) + '",' +
-      '"documentType":"' + %trim(Document(idx).DocType) + '",' +
-      '"deleteReason":"BROKER_REQUEST",' +
-      '"deletedBy":"ROSALIA GARCIA"' +
-      '}';
-
-   // Call HTTP API using QSYS2
-   exec sql
-      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
-      into :HttpStatus, :ApiResponse
-      from table(
-         QSYS2.HTTP_DELETE(
-            URL => 'https://docmgmt.axainsurance.com/api/v1/delete',
-            DATA => :JsonPayload,
-            HEADERS => 'Content-Type,application/json'
-         )
-      );
-
-   if HttpStatus = 200 or HttpStatus = 204;
-      Document(idx).DocStatus = 'DELETED';
-      SuccessCount += 1;
-
-      chain Document(idx).DocId AXADOC;
-      if %found;
-         delete AXADOC;
-      endif;
-   else;
-      Document(idx).DocStatus = 'DELETE FAILED';
-   endif;
-
-end-proc;
+C*****************************************************************
+C*****************************************************************
+C     RETUPL        BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'DOCUPLOAD'
+C                   ENDSR

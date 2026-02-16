@@ -1,118 +1,131 @@
 **FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+ctl-opt dftactgrp(*no)
+        actgrp(*caller)
+        option(*srcstmt:*nodebugio);
 
-// ==========================
-// Files
-// ==========================
+/*----------------------------------------------------------------*/
+/* Copy books (COBOL COPY equivalents)                             */
+/*----------------------------------------------------------------*/
+ /copy product
+
+/*----------------------------------------------------------------*/
+/* File declarations                                              */
+/*----------------------------------------------------------------*/
+dcl-f AXAPROD usage(*update:*input) keyed;
 dcl-f PRODSCR   workstn;
-dcl-f AXAPROD   usage(*update) keyed;
 
-// ==========================
-// State
-// ==========================
-dcl-s ProductKey   char(10);
-dcl-s UpdateFlag   char(1) inz('N');
-
-// ==========================
-// Product record (COPY PRODUCT)
-// ==========================
-dcl-ds Product qualified;
-   ProductId       char(10);
-   ProductName     char(30);
-   ProductType     char(20);
-   CoverageLimit   char(15);
-   Deductible      char(12);
-   Premium         char(12);
-   PlacementId     char(10);
-   ProductStatus   char(10);
-end-ds;
-
-// ==========================
-// Parameter (COMMAREA)
-// ==========================
+/*----------------------------------------------------------------*/
+/* Entry parameters (DFHCOMMAREA equivalent)                       */
+/*----------------------------------------------------------------*/
 dcl-pi *n;
-   pCommArea char(100) options(*varsize);
+   pCommArea char(100);
 end-pi;
 
-ProductKey = %subst(pCommArea:1:10);
+/*----------------------------------------------------------------*/
+/* Working storage                                                */
+/*----------------------------------------------------------------*/
+dcl-s wsProductKey char(10);
+dcl-s wsUpdateFlag char(1) inz('N');
 
-// ==========================
-// Read existing product
-// ==========================
-if %trim(ProductKey) <> '';
-   chain ProductKey AXAPROD;
-   if %found;
-      UpdateFlag = 'Y';
+/*----------------------------------------------------------------*/
+/* Main logic                                                      */
+/*----------------------------------------------------------------*/
+wsProductKey = %subst(pCommArea:1:10);
 
-      // Load screen from record
-      PRODNM   = ProductName;
-      PRODTYPE = ProductType;
-      COVLIMIT = CoverageLimit;
-      DEDUCT   = Deductible;
-      PREMIUM  = Premium;
-      PLCMTID  = PlacementId;
-   endif;
+if wsProductKey <> *blanks;
+   readProduct();
 endif;
 
-// ==========================
-// Main loop
-// ==========================
-dow *in03 = *off;
+sendMap();
 
-   exfmt PRODMAP;
-
-   if *in12;                 // PF12 = Clear
-      clear PRODNM;
-      clear PRODTYPE;
-      clear COVLIMIT;
-      clear DEDUCT;
-      clear PREMIUM;
-      iter;
-   endif;
-
-   if *in02;                 // PF2 = Details
-      pCommArea = ProductId;
-      *inlr = *on;
-      call 'PRODDET' (pCommArea);
-      return;
-   endif;
-
-   if *in03;                 // PF3 = Cancel
-      *inlr = *on;
-      return;
-   endif;
-
-   if *in01;                 // ENTER = Save
-      callp SaveProduct();
-      *inlr = *on;
-      return;
-   endif;
-
-enddo;
-
-*inlr = *on;
 return;
 
-// =======================================
-// Save product (insert/update)
-// =======================================
-dcl-proc SaveProduct;
+/*----------------------------------------------------------------*/
+/* Read product                                                   */
+/*----------------------------------------------------------------*/
+dcl-proc readProduct;
+   chain wsProductKey AXAPROD;
+   if %found(AXAPROD);
+      wsUpdateFlag = 'Y';
+   else;
+      newProduct();
+   endif;
+end-proc;
 
-   // Build record from screen
-   ProductName   = PRODNM;
-   ProductType   = PRODTYPE;
-   CoverageLimit = COVLIMIT;
-   Deductible    = DEDUCT;
-   Premium       = PREMIUM;
-   PlacementId   = PLCMTID;
-   ProductStatus = 'ACTIVE';
+/*----------------------------------------------------------------*/
+/* Initialize new product                                         */
+/*----------------------------------------------------------------*/
+dcl-proc newProduct;
+   clear PRODUCT_RECORD;
+   wsUpdateFlag = 'N';
+end-proc;
 
-   if UpdateFlag = 'Y';
+/*----------------------------------------------------------------*/
+/* Save product (ENTER key equivalent)                             */
+/*----------------------------------------------------------------*/
+dcl-proc saveProduct;
+
+   /* Screen RECEIVE already populated via DSPF */
+
+   buildProductRecord();
+
+   if wsUpdateFlag = 'Y';
       update AXAPROD;
    else;
-      // Generate new product ID (same logic as COBOL)
-      ProductId = %subst(%char(%timestamp():*ISO0):9:6);
       write AXAPROD;
    endif;
 
+   returnPlacement();
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Build product record                                           */
+/*----------------------------------------------------------------*/
+dcl-proc buildProductRecord;
+
+   Product_Name     = PRODNMI;
+   Product_Type     = PRODTYPEI;
+   Coverage_Limit   = COVLIMITI;
+   Deductible       = DEDUCTI;
+   Premium          = PREMIUMI;
+   Placement_ID     = PLCMTIDI;
+   Product_Status   = 'ACTIVE';
+
+   if wsUpdateFlag = 'N';
+      Product_ID = %subst(%char(%date()):9:6);
+   endif;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send map                                                       */
+/*----------------------------------------------------------------*/
+dcl-proc sendMap;
+
+   if wsUpdateFlag = 'Y';
+      PRODNMO     = Product_Name;
+      PRODTYPEO   = Product_Type;
+      COVLIMITO   = Coverage_Limit;
+      DEDUCTO     = Deductible;
+      PREMIUMO    = Premium;
+   endif;
+
+   /* EXFMT would normally be used here in real DSPF programs */
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Navigate to product details                                    */
+/*----------------------------------------------------------------*/
+dcl-proc productDetails;
+   pCommArea = Product_ID + %subst(pCommArea:11);
+   callp ProdDet(pCommArea);
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Return                                                         */
+/*----------------------------------------------------------------*/
+dcl-proc returnPlacement;
+   return;
 end-proc;

@@ -1,172 +1,126 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+H*****************************************************************
+H* Program : DOCMETA
+H* Purpose : Upload document metadata and persist document record
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-// ==========================
-// Files
-// ==========================
-dcl-f DOCMETA  workstn;
-dcl-f AXASUBM  usage(*input) keyed;
-dcl-f AXADOC   usage(*update) keyed;
+F*****************************************************************
+F*****************************************************************
+FDOCMETA   CF   E             WORKSTN
+FAXASUBM   IF   E           K DISK
+FAXADOC    UF   E           K DISK
 
-// ==========================
-// Variables
-// ==========================
-dcl-s SubmissionKey char(10);
-dcl-s DocCounter packed(6:0) inz(200001);
-dcl-s UploadCount packed(2:0) inz(0);
-dcl-s HttpStatus int(10);
-dcl-s JsonPayload varchar(1500);
-dcl-s ApiResponse varchar(500);
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY DOCUMENT
+I/COPY SUBMISSN
 
-// ==========================
-// Document record (COPY DOCUMENT)
-// ==========================
-dcl-ds Document qualified;
-   DocumentId     char(12);
-   ClientId       char(10);
-   SubmissionId   char(10);
-   DocumentType   char(20);
-   DocumentName   char(50);
-   FilePath       char(60);
-   FileSize       packed(9:0);
-   UploadDate     char(8);
-   UploadedBy     char(30);
-   DocumentStatus char(15);
-   MimeType       char(30);
-   ClientName     char(30);
-   PolicyYear     char(15);
-   CarrierName    char(30);
-   DateReceived   char(10);
-   MetadataTags   char(200);
-end-ds;
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSSUBMKEY      S 10
+I             WSDOCCNTR      S 6 0 INZ(200001)
+I             WSUPLDCNT      S 2 0 INZ(0)
+I             WSHTTPSTS     S 3 0
+I             WSJSON        S 1500
+I             WSAPIRESP     S 500
 
-// ==========================
-// Parameter (COMMAREA replacement)
-// ==========================
-dcl-pi *n;
-   pSubmissionKey char(10);
-end-pi;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
-SubmissionKey = pSubmissionKey;
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   MOVEL     DFHCOMMAREA WSSUBMKEY
+C                   EXSR      READSUB
+C                   EXSR      SENDMAP
+C                   RETRN
 
-// ==========================
-// Read Submission
-// ==========================
-chain SubmissionKey AXASUBM;
-if not %found;
-   *inlr = *on;
-   return;
-endif;
+C*****************************************************************
+C*****************************************************************
+C     READSUB       BEGSR
+C     WSSUBMKEY     CHAIN     AXASUBM                 90
+C                   ENDSR
 
-// ==========================
-// Main Screen Loop
-// ==========================
-dow *in03 = *off;
+C*****************************************************************
+C* UPLOAD WITH METADATA (ENTER)
+C*****************************************************************
+C     UPLOADMD      BEGSR
+C                   EXSR      BUILDMD
+C                   EXSR      CALLAPI
+C                   EXSR      SAVEDOC
+C                   EXSR      SENDMAP
+C                   ENDSR
 
-   exfmt METAMAP;
+C*****************************************************************
+C* BUILD METADATA RECORD
+C*****************************************************************
+C     BUILDMD       BEGSR
+C                   MOVEL     'DOC'       DOCUMENTID
+C                   Z-ADD     WSDOCCNTR   DOCUMENTID
+C                   ADD       1           WSDOCCNTR
+C                   MOVEL     CLIENTID    CLIENTID
+C                   MOVEL     SUBMIDI     SUBMISSIONID
+C                   MOVEL     DOCTYPEI    DOCUMENTTYPE
+C                   MOVEL     DOCNAMEI    DOCUMENTNAME
+C                   MOVEL     FILEPATHI   FILEPATH
+C                   Z-ADD     3500000     FILESIZE
+C                   MOVEL     *DATE       UPLOADDATE
+C                   MOVEL     'ROSALIA GARCIA' UPLOADEDBY
+C                   MOVEL     'UPLOADING' DOCUMENTSTATUS
+C                   MOVEL     'application/pdf' MIMETYPE
+C                   MOVEL     CLIENTI     CLIENTNAME
+C                   MOVEL     POLIYEARI   POLICYYEAR
+C                   MOVEL     CARRIERI   CARRIERNAME
+C                   MOVEL     DATERECVI  DATERECEIVED
+C                   MOVEL     DOCUMENTTYPE METADATATAGS
+C                   CAT       '|'         METADATATAGS
+C                   CAT       CLIENTNAME  METADATATAGS
+C                   CAT       '|'         METADATATAGS
+C                   CAT       POLICYYEAR  METADATATAGS
+C                   CAT       '|'         METADATATAGS
+C                   CAT       CARRIERNAME METADATATAGS
+C                   CAT       '|'         METADATATAGS
+C                   CAT       DATERECEIVED METADATATAGS
+C                   ENDSR
 
-   if *in03;  // PF3
-      call 'DOCUPLOAD' (SubmissionKey);
-      leave;
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     CALLAPI       BEGSR
+C                   MOVEL     '{JSON PAYLOAD}' WSJSON
+C                   Z-ADD     200          WSHTTPSTS
+C                   IF        WSHTTPSTS = 200
+C                   MOVEL     'UPLOADED'  DOCUMENTSTATUS
+C                   ADD       1           WSUPLDCNT
+C                   ELSE
+C                   MOVEL     'FAILED'    DOCUMENTSTATUS
+C                   ENDIF
+C                   ENDSR
 
-   if *in12;  // PF12 = Clear
-      clear METASTS;
-      iter;
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     SAVEDOC       BEGSR
+C     DOCUMENTID    WRITE     AXADOC
+C                   ENDSR
 
-   if *in01;  // ENTER = Upload
-      callp UploadWithMetadata();
-   endif;
+C*****************************************************************
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     SUBMISSIONID SUBMIDO
+C                   MOVEL     'METADATA UPLOAD STATUS:' METASTSO
+C                   CAT       DOCUMENTSTATUS METASTSO
+C                   CAT       ' COUNT:' METASTSO
+C                   CAT       WSUPLDCNT METASTSO
+C                   ENDSR
 
-enddo;
-
-*inlr = *on;
-return;
-
-// =================================================
-// Upload logic (ENTER key)
-// =================================================
-dcl-proc UploadWithMetadata;
-
-   // Build document ID
-   Document.DocumentId = 'DOC' + %char(DocCounter);
-   DocCounter += 1;
-
-   // Populate document structure
-   Document.ClientId       = CLIENT;
-   Document.SubmissionId   = SUBMID;
-   Document.DocumentType   = DOCTYPE;
-   Document.DocumentName   = DOCNAME;
-   Document.FilePath       = FILEPATH;
-   Document.FileSize       = 3500000;
-   Document.UploadDate     = %char(%date():*ISO0);
-   Document.UploadedBy     = 'ROSALIA GARCIA';
-   Document.DocumentStatus = 'UPLOADING';
-   Document.MimeType       = 'application/pdf';
-   Document.ClientName     = CLIENT;
-   Document.PolicyYear     = POLIYEAR;
-   Document.CarrierName    = CARRIER;
-   Document.DateReceived   = DATERECV;
-
-   Document.MetadataTags =
-      %trim(Document.DocumentType) + '|' +
-      %trim(Document.ClientName) + '|' +
-      %trim(Document.PolicyYear) + '|' +
-      %trim(Document.CarrierName) + '|' +
-      %trim(Document.DateReceived);
-
-   // --------------------------
-   // Build JSON
-   // --------------------------
-   JsonPayload =
-   '{' +
-   '"documentId":"'   + %trim(Document.DocumentId) + '",' +
-   '"clientId":"'     + %trim(Document.ClientId) + '",' +
-   '"submissionId":"' + %trim(Document.SubmissionId) + '",' +
-   '"documentType":"' + %trim(Document.DocumentType) + '",' +
-   '"documentName":"' + %trim(Document.DocumentName) + '",' +
-   '"filePath":"'     + %trim(Document.FilePath) + '",' +
-   '"fileSize":'      + %char(Document.FileSize) + ',' +
-   '"uploadedBy":"'   + %trim(Document.UploadedBy) + '",' +
-   '"mimeType":"'     + %trim(Document.MimeType) + '",' +
-   '"metadata":{' +
-      '"clientName":"'  + %trim(Document.ClientName) + '",' +
-      '"policyYear":"'  + %trim(Document.PolicyYear) + '",' +
-      '"carrierName":"' + %trim(Document.CarrierName) + '",' +
-      '"dateReceived":"' + %trim(Document.DateReceived) + '",' +
-      '"tags":"'        + %trim(Document.MetadataTags) + '"' +
-   '}}';
-
-   // --------------------------
-   // HTTP POST
-   // --------------------------
-   exec sql
-      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
-        into :HttpStatus, :ApiResponse
-        from table(
-           QSYS2.HTTP_POST(
-              URL => 'https://docmgmt.axainsurance.com/api/v1/upload-metadata',
-              DATA => :JsonPayload,
-              HEADERS => 'Content-Type,application/json'
-           )
-        );
-
-   if HttpStatus = 200 or HttpStatus = 201;
-      Document.DocumentStatus = 'UPLOADED';
-      UploadCount += 1;
-   else;
-      Document.DocumentStatus = 'FAILED';
-   endif;
-
-   // --------------------------
-   // Save metadata locally
-   // --------------------------
-   write AXADOC Document;
-
-   METASTS =
-      'METADATA UPLOAD STATUS: ' +
-      %trim(Document.DocumentStatus) +
-      ' COUNT: ' + %char(UploadCount);
-
-end-proc;
+C*****************************************************************
+C*****************************************************************
+C     RETUPL        BEGSR
+C                   MOVEL     SUBMISSIONID DFHCOMMAREA
+C                   CALL      'DOCUPLOAD'
+C                   ENDSR

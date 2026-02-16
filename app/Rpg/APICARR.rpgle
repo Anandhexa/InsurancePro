@@ -32,14 +32,6 @@ dcl-ds Carrier dim(3);
    Token char(100);
 end-ds;
 
-/* Submission DS (example) */
-dcl-ds SubmissionRec likerec(AXASUBM:*all);
-dcl-ds ProductRec likerec(AXAPROD:*all);
-dcl-ds PlacementRec likerec(AXAPLCMT:*all);
-
-/* RFQ DS */
-dcl-ds RFQRec likerec(AXARFQ:*all);
-
 /* ---------------------------
    Main Procedure
 ----------------------------*/
@@ -190,3 +182,4 @@ RFQRec.CreatedDate  = %date();
 write AXARFQ RFQRec;
 
 endsr;
+

@@ -1,141 +1,154 @@
-**free
-ctl-opt dftactgrp(*no) actgrp(*caller);
+H*****************************************************************
+H* Program : CLAIMS
+H* Purpose : Claim Creation / Update / Inquiry
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-dcl-f AXACLAIMS usage(*update:*output) keyed;
-dcl-f AXAPOLICY usage(*input) keyed;
-dcl-f CLAIMS workstn;
+F*****************************************************************
+F* Files (CICS-managed VSAM equivalents)
+F*****************************************************************
+FCLAIMS   CF   E             WORKSTN
+FAXACLAIMS IF   E           K DISK
+FAXAPOLICY IF   E           K DISK
 
-dcl-s wsClaimKey      char(15);
-dcl-s wsClaimCounter  packed(8:0) inz(20000001);
-dcl-s wsUpdateFlag    char(1) inz('N');
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY CLAIMS
+I/COPY POLICY
 
-dcl-s currentDate     char(8);
-dcl-s currentTS       timestamp;
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSCLAIMKEY     S 15
+I             WSCLMCNT       S 8 0 INZ(20000001)
+I             WSUPDFLG       S 1   INZ('N')
 
-dcl-pi *n;
-   commArea char(100);
-end-pi;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   MOVEL     DFHCOMMAREA WSCLAIMKEY
 
-// =========================
-// MAIN
-// =========================
+C                   IF        WSCLAIMKEY <> *BLANKS
+C                   EXSR      READCLM
+C                   ENDIF
 
-wsClaimKey = %subst(commArea:1:15);
+C                   EXSR      SENDMAP
+C                   RETRN
 
-if %trim(wsClaimKey) <> '';
-   chain wsClaimKey AXACLAIMS;
-   if %found(AXACLAIMS);
-      wsUpdateFlag = 'Y';
-   else;
-      exsr NewClaim;
-   endif;
-endif;
+C*****************************************************************
+C*****************************************************************
+C     READCLM       BEGSR
+C     WSCLAIMKEY    CHAIN     AXACLAIMS                90
+C                   IF        *IN90 = *OFF
+C                   MOVEL     'Y'         WSUPDFLG
+C                   ELSE
+C                   EXSR      NEWCLM
+C                   ENDIF
+C                   ENDSR
 
-exsr SendScreen;
+C*****************************************************************
+C* NEW CLAIM
+C*****************************************************************
+C     NEWCLM        BEGSR
+C                   CLEAR     CLAIMSRECORD
+C                   MOVEL     DFHCOMMAREA POLICYID
+C                   EXSR      READPOL
+C                   EXSR      BUILDNEW
+C                   ENDSR
 
-*inlr = *on;
-return;
+C*****************************************************************
+C*****************************************************************
+C     READPOL       BEGSR
+C     POLICYID      CHAIN     AXAPOLICY                91
+C                   ENDSR
 
+C*****************************************************************
+C* BUILD NEW CLAIM
+C*****************************************************************
+C     BUILDNEW      BEGSR
+C                   MOVEL     'CLM'        CLAIMID
+C                   MOVEL     WSCLMCNT     CLAIMID+3
+C                   ADD       1            WSCLMCNT
 
-// =========================
-// NEW CLAIM
-// =========================
-begsr NewClaim;
+C                   MOVEL     'CLAIM-'     CLAIMNUMBER
+C                   TIME                    LASTMODIFIED
+C                   MOVEL     POLICYID     POLICYID
+C                   MOVEL     INSUREDNAME  INSUREDNAME
+C                   MOVEL     CARRIERNAME  CARRIERNAME
+C                   MOVEL     'REPORTED'   CLAIMSTATUS
+C                   DATE                    REPORTEDDATE
+C                   DATE                    CREATEDDATE
+C                   ENDSR
 
-   clear AXACLAIMS;
+C*****************************************************************
+C* SAVE CLAIM
+C*****************************************************************
+C     SAVECLM       BEGSR
+C                   EXSR      BUILDREC
 
-   POLICYID = %subst(commArea:1:15);
+C                   IF        WSUPDFLG = 'Y'
+C                   UPDATE    AXACLAIMS
+C                   ELSE
+C                   WRITE     AXACLAIMS
+C                   ENDIF
 
-   chain POLICYID AXAPOLICY;
-   if %found(AXAPOLICY);
+C                   EXSR      SENDMAP
+C                   ENDSR
 
-      CLAIMID = 'CLM' + %char(wsClaimCounter);
-      wsClaimCounter += 1;
+C*****************************************************************
+C* BUILD CLAIM RECORD FROM MAP
+C*****************************************************************
+C     BUILDREC      BEGSR
+C                   MOVEL     CLMTYPEI    CLAIMTYPE
+C                   MOVEL     LOSSDTI     LOSSDATE
+C                   MOVEL     LOSSDESI    LOSSDESC
+C                   MOVEL     CLMAMTI     CLAIMAMOUNT
+C                   MOVEL     RESERVEI    RESERVEAMT
+C                   MOVEL     ADJNAMEI    ADJUSTERNAME
+C                   SUB       PAIDAMOUNT CLAIMAMOUNT OUTSTANDAMT
+C                   ENDSR
 
-      currentDate = %char(%date():*iso0);
-      currentTS   = %timestamp();
+C*****************************************************************
+C* SEND MAP
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     CLAIMID     CLAIMIDO
+C                   MOVEL     CLAIMNUMBER CLMNUMO
+C                   MOVEL     INSUREDNAME INSNAMEO
+C                   MOVEL     CLAIMTYPE   CLMTYPEO
+C                   MOVEL     LOSSDATE    LOSSDTO
+C                   MOVEL     CLAIMAMOUNT CLMAMTO
+C                   MOVEL     RESERVEAMT  RESERVEO
+C                   MOVEL     PAIDAMOUNT  PAIDO
+C                   MOVEL     OUTSTANDAMT OUTSTO
+C                   MOVEL     CLAIMSTATUS CLMSTSO
+C                   ENDSR
 
-      CLAIMNUMBER =
-         'CLAIM-' +
-         %subst(currentDate:1:8) +
-         '-' +
-         %char(wsClaimCounter);
+C*****************************************************************
+C*****************************************************************
+C     CLMINV        BEGSR
+C                   MOVEL     CLAIMID     DFHCOMMAREA
+C                   CALL      'CLMINVEST'
+C                   ENDSR
 
-      INSUREDNAME  = INSUREDNAME;  // from policy
-      CARRIERNAME  = CARRIERNAME;
-      CLAIMSTATUS  = 'REPORTED';
-      REPORTEDDATE = currentDate;
-      CREATEDDATE  = currentDate;
-      LASTMODIFIED = currentTS;
+C*****************************************************************
+C*****************************************************************
+C     CLMSET        BEGSR
+C                   MOVEL     CLAIMID     DFHCOMMAREA
+C                   CALL      'CLMSETTLE'
+C                   ENDSR
 
-   endif;
-
-endsr;
-
-
-// =========================
-// SEND / RECEIVE SCREEN
-// =========================
-begsr SendScreen;
-
-   CLAIMIDO = CLAIMID;
-   CLMNUMO  = CLAIMNUMBER;
-   INSNAMEO = INSUREDNAME;
-   CLMTYPEO = CLAIMTYPE;
-   LOSSDTO  = LOSSDate;
-   CLMAMTO  = CLAIMAMOUNT;
-   RESERVEO = RESERVEAMOUNT;
-   PAIDO    = PAIDAMOUNT;
-   OUTSTO   = OUTSTANDINGAMOUNT;
-   CLMSTSO  = CLAIMSTATUS;
-
-   exfmt CLAIMMP;
-
-   select;
-      when *in01;   // F1
-         commArea = CLAIMID;
-         call 'CLMINVEST' commArea;
-
-      when *in02;   // F2
-         commArea = CLAIMID;
-         call 'CLMSETTLE' commArea;
-
-      when *in03;   // F3
-         commArea = POLICYID;
-         call 'POLICY' commArea;
-
-      when *in12;   // F12 Refresh
-         exsr SendScreen;
-
-      other;
-         exsr SaveClaim;
-   endsl;
-
-endsr;
-
-
-// =========================
-// SAVE CLAIM
-// =========================
-begsr SaveClaim;
-
-   CLAIMTYPE        = CLMTYPEI;
-   LOSSDate         = LOSSDTI;
-   LOSSDESCRIPTION  = LOSSDESI;
-   CLAIMAMOUNT      = CLMAMTI;
-   RESERVEAMOUNT    = RESERVEI;
-   ADJUSTERNAME     = ADJNAMEI;
-
-   OUTSTANDINGAMOUNT =
-      CLAIMAMOUNT - PAIDAMOUNT;
-
-   if wsUpdateFlag = 'Y';
-      update AXACLAIMS;
-   else;
-      write AXACLAIMS;
-   endif;
-
-   exsr SendScreen;
-
-endsr;
+C*****************************************************************
+C*****************************************************************
+C     RETPOL        BEGSR
+C                   MOVEL     POLICYID    DFHCOMMAREA
+C                   CALL      'POLICY'
+C                   ENDSR

@@ -144,17 +144,6 @@ dcl-proc SendHTTP;
       '"carrierName":"' + %trim(Carrier(idx).Name) + '"' +
       '}';
 
-   exec sql
-      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
-      into :WS_HTTP_STATUS, :WS_API_RESPONSE
-      from table (
-         QSYS2.HTTP_POST(
-           url => :Carrier(idx).Url,
-           data => :WS_JSON_PAYLOAD,
-           headers => 'content-type,application/json'
-         )
-      );
-
    WS_API_COUNT += 1;
 
    if WS_HTTP_STATUS = 200 or WS_HTTP_STATUS = 201;
@@ -182,4 +171,5 @@ RFQRec.CreatedDate  = %date();
 write AXARFQ RFQRec;
 
 endsr;
+
 

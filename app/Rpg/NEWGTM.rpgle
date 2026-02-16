@@ -105,4 +105,5 @@ dcl-proc SubmitGtmRequest;
    // Go to GTM details
    call 'GTMDETAIL' (SubmissionKey);
 
+
 end-proc;

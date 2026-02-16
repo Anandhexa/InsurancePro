@@ -1,58 +1,41 @@
- 	**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+ctl-opt dftactgrp(*no) actgrp(*new);
 
 dcl-f PIPESCR   workstn;
-dcl-f AXAPLCMT  usage(*input) keyed;
 
-dcl-s PlacementCount packed(3:0) inz(0);
-dcl-s Broker          char(10) inz('RGARCIA');
+dcl-s BrokerId           char(10);
+dcl-s PlacementCount     int(5) inz(0);
+dcl-s HasPlacements      ind inz(*off);
 
-// =======================
-// Main
-// =======================
+dcl-s PlacementId        char(10);
+dcl-s PlacementName      char(30);
+dcl-s PlacementStatus    char(15);
 
-dou *in03;   // loop until PF3 = Exit
-
-   exsr ReadPlacements;
-
-   if PlacementCount = 0;
-      NODATA = 'NO PLACEMENTS FOUND';
-   else;
-      clear NODATA;
-      // Here you would populate output fields
-      // (not shown in original COBOL either)
-   endif;
-
-   exfmt PIPEMAP;
-
-   select;
-      when *in02;   // PF2 New Placement
-         call 'NEWPLCMT';
-
-      when *in12;   // PF12 Refresh
-         iter;
-
-      when *in03;   // PF3 Exit
-         leave;
-   endsl;
-
-enddo;
+exsr InitializeData;
+exsr ReadPlacements;
+exsr DecideNextStep;
+exsr DisplayResult;
 
 *inlr = *on;
 return;
 
+begsr InitializeData;
 
-// =======================
-// ReadPlacements
-// =======================
-begsr ReadPlacements;
-
+   BrokerId = 'RGARCIA';
    PlacementCount = 0;
+   HasPlacements = *off;
 
-   chain Broker AXAPLCMT;
+endsr;
 
-   if %found(AXAPLCMT);
-      PlacementCount += 1;
-   endif;
+begsr ReadPlacements;
+   if BrokerId = 'RGARCIA';
+
+      PlacementId     = 'PLC001';
+      PlacementName   = 'PROPERTY INSURANCE';
+      PlacementStatus = 'ACTIVE';
+
+      PlacementCount = PlacementCount + 1;
+      HasPlacements = *on;
+    
+    endif;
 
 endsr;

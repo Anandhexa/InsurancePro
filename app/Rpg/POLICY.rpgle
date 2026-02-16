@@ -1,118 +1,194 @@
 **FREE
-ctl-opt dftactgrp(*no) actgrp(*new);
+ctl-opt dftactgrp(*no)
+        actgrp(*caller)
+        option(*srcstmt:*nodebugio);
 
-/* Files */
+/*----------------------------------------------------------------*/
+/* Files                                                          */
+/*----------------------------------------------------------------*/
+dcl-f AXAPOLICY usage(*update) keyed;
+dcl-f AXAQUOTE  usage(*input)  keyed;
+dcl-f AXASUBM   usage(*input)  keyed;
 dcl-f POLICYDSPF workstn;
-dcl-f AXAPOLICY keyed;
-dcl-f AXAQUOTE  keyed;
-dcl-f AXASUBM   keyed;
 
-/* Program parameter (COMMAREA equivalent) */
+/*----------------------------------------------------------------*/
+/* Copy books (COBOL COPY POLICY / QUOTE / SUBMISSN)               */
+/*----------------------------------------------------------------*/
+ /copy POLICY
+ /copy QUOTE
+ /copy SUBMISSN
+
+/*----------------------------------------------------------------*/
+/* Entry parameter (DFHCOMMAREA equivalent)                        */
+/*----------------------------------------------------------------*/
 dcl-pi *n;
-   pCommArea char(100) options(*varsize);
+   pCommArea char(100);
 end-pi;
 
-/* Variables */
+/*----------------------------------------------------------------*/
+/* Working storage                                                */
+/*----------------------------------------------------------------*/
 dcl-s wsPolicyKey     char(15);
 dcl-s wsPolicyCounter packed(8:0) inz(10000001);
-dcl-s today           char(8);
 
-/* Indicators */
-dcl-s exitProgram ind inz(*off);
-
-/* Main Logic */
-
+/*----------------------------------------------------------------*/
+/* Main logic                                                      */
+/*----------------------------------------------------------------*/
 wsPolicyKey = %subst(pCommArea:1:15);
 
 if %trim(wsPolicyKey) <> '';
-   chain wsPolicyKey AXAPOLICY;
-   if not %found(AXAPOLICY);
-      exsr NewPolicy;
-   endif;
+   readPolicy();
+else;
+   newPolicy();
 endif;
 
-dow not exitProgram;
-
-   exsr SendScreen;
-   exfmt POLICYR;
-
-   select;
-      when *in01;  // PF1 Amendments
-         pCommArea = POLICYID;
-         call 'POLAMEND' pCommArea;
-      when *in02;  // PF2 Renewal
-         pCommArea = POLICYID;
-         call 'POLRENEW' pCommArea;
-      when *in03;  // PF3 Return
-         call 'QUOTEDASH' pCommArea;
-         exitProgram = *on;
-      when *in12;  // Refresh
-         iter;
-      other;
-         exsr SavePolicy;
-   endsl;
-
-enddo;
-
-*inlr = *on;
+sendMap();
 return;
 
-/* ============================== */
-/* New Policy Logic               */
-/* ============================== */
-begsr NewPolicy;
+/*----------------------------------------------------------------*/
+/* Read existing policy                                           */
+/*----------------------------------------------------------------*/
+dcl-proc readPolicy;
 
-   clear AXAPOLICY;
+   chain wsPolicyKey AXAPOLICY;
 
-   // Quote ID from commarea
-   chain %subst(pCommArea:1:10) AXAQUOTE;
-   if %found(AXAQUOTE);
-      chain SUBMISSIONID AXASUBM;
+   if not %found(AXAPOLICY);
+      newPolicy();
    endif;
 
-   // Build Policy ID
-   POLICYID = 'POL' + %char(wsPolicyCounter);
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Create new policy from quote                                   */
+/*----------------------------------------------------------------*/
+dcl-proc newPolicy;
+
+   clear POLICY_RECORD;
+
+   Quote_ID = %subst(pCommArea:1:10);
+   readQuoteData();
+   buildPolicyFromQuote();
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Read quote and submission                                      */
+/*----------------------------------------------------------------*/
+dcl-proc readQuoteData;
+
+   chain Quote_ID AXAQUOTE;
+   if not %found(AXAQUOTE);
+      return;
+   endif;
+
+   chain Submission_ID AXASUBM;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Build policy from quote                                        */
+/*----------------------------------------------------------------*/
+dcl-proc buildPolicyFromQuote;
+
+   Policy_ID =
+      'POL' + %char(wsPolicyCounter);
+
    wsPolicyCounter += 1;
 
-   today = %char(%date():*iso0);
+   Policy_Number =
+      'AXA-' +
+      %char(%date():*ISO0) + '-' +
+      %char(wsPolicyCounter);
 
-   POLNUM = 'AXA-' + today + '-' + %char(wsPolicyCounter);
+   Submission_ID     = Submission_ID;
+   Quote_ID          = Quote_ID;
+   Carrier_Name      = Carrier_Name;
+   Total_Premium     = Total_Premium;
+   Commission_Rate   = Commission_Rate;
+   Commission_Amount = Commission_Amount;
+   Policy_Limit      = Limit;
+   Deductible        = Attach_Point;
 
-   POLICYLIMIT  = LIMIT;
-   PREMIUM      = TOTALPREMIUM;
-   POLSTS       = 'ACTIVE';
+   Policy_Status     = 'ACTIVE';
+   Renewal_Flag      = 'N';
+   Created_Date      = %char(%date():*ISO0);
+   Last_Modified     = %timestamp();
 
-endSr;
+end-proc;
 
-/* ============================== */
-/* Save Policy                    */
-/* ============================== */
-begsr SavePolicy;
+/*----------------------------------------------------------------*/
+/* ENTER – Save policy                                            */
+/*----------------------------------------------------------------*/
+dcl-proc savePolicy;
 
-   POLICYID   = POLICYID;
-   INSUREDNAME = INSNAME;
-   POLICYTYPE = POLTYPE;
-   INCEPTIONDATE = INCEPDT;
-   EXPIRYDATE = EXPIRDT;
-   BROKERNAME = BROKER;
+   /* EXFMT POLICYMP would populate input fields */
 
+   buildPolicyRecord();
    write AXAPOLICY;
 
-endSr;
+   sendMap();
 
-/* ============================== */
-/* Send Screen                    */
-/* ============================== */
-begsr SendScreen;
+end-proc;
 
-   POLICYID  = POLICYID;
-   POLNUM    = POLNUM;
-   INSNAME   = INSUREDNAME;
-   POLTYPE   = POLICYTYPE;
-   INCEPDT   = INCEPTIONDATE;
-   EXPIRDT   = EXPIRYDATE;
-   POLIMIT   = POLICYLIMIT;
-   PREMIUM   = TOTALPREMIUM;
-   POLSTS    = POLICYSTATUS;
+/*----------------------------------------------------------------*/
+/* Build policy record from screen                                */
+/*----------------------------------------------------------------*/
+dcl-proc buildPolicyRecord;
 
-endSr;
+   Insured_Name    = INSNAMEI;
+   Policy_Type     = POLTYPEI;
+   Inception_Date  = INCEPDTI;
+   Expiry_Date     = EXPIRDTI;
+   Broker_Name     = BROKERI;
+
+   Last_Modified   = %timestamp();
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send display                                                   */
+/*----------------------------------------------------------------*/
+dcl-proc sendMap;
+
+   POLICYIDO = Policy_ID;
+   POLNUMO   = Policy_Number;
+   INSNAMEO = Insured_Name;
+   POLTYPEO = Policy_Type;
+   INCEPDTO = Inception_Date;
+   EXPIRDTO = Expiry_Date;
+   POLIMITO = Policy_Limit;
+   PREMIUMO = Total_Premium;
+   POLSTSO  = Policy_Status;
+
+   /* EXFMT POLICYMP */
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF1 – Policy amendments                                       */
+/*----------------------------------------------------------------*/
+dcl-proc policyAmendments;
+
+   pCommArea = Policy_ID + %subst(pCommArea:16);
+   callp POLAMEND(pCommArea);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF2 – Policy renewal                                          */
+/*----------------------------------------------------------------*/
+dcl-proc policyRenewal;
+
+   pCommArea = Policy_ID + %subst(pCommArea:16);
+   callp POLRENEW(pCommArea);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF3 – Return dashboard                                        */
+/*----------------------------------------------------------------*/
+dcl-proc returnDashboard;
+
+   callp QUOTEDASH(pCommArea);
+
+end-proc;

@@ -1,137 +1,126 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+H*****************************************************************
+H* Program : EMAILMON
+H* Purpose : Monitor Email Queue and Trigger Quote Extraction
+H* Source  : Mainframe COBOL Migration
+H*****************************************************************
 
-// =======================
-// Files
-// =======================
-dcl-f EMAILMON workstn;
+F*****************************************************************
+F* Files
+F*****************************************************************
+FEMAILMON  CF   E             WORKSTN
 
-// =======================
-// Scalars
-// =======================
-dcl-s ExtractedCount packed(2:0) inz(0);
 
-// =======================
-// Email table (OCCURS 3)
-// =======================
-dcl-ds EmailEntry qualified dim(3);
-   EmailFrom char(15);
-   RfqId     char(10);
-   Carrier   char(15);
-   Status    char(15);
-end-ds;
+I*****************************************************************
+I* COPYBOOKS
+I*****************************************************************
+I/COPY EMAILQUOTE
 
-// =======================
-// Main program
-// =======================
+I*****************************************************************
+I* WORKING STORAGE
+I*****************************************************************
+I             WSRESPONSE     S 9 0
+I             WSEXTCNT       S 2 0 INZ(0)
 
-// Load initial state
-callp LoadEmailStatus();
-callp SendMap();
+I*****************************************************************
+I* EMAIL STATUS TABLE (OCCURS 3)
+I*****************************************************************
+I             WSEMAILTAB     DS
+I                                      1 120
+I             WSEMAILFROM                1  15 OCCURS 3
+I             WSRFQID                   16  25 OCCURS 3
+I             WSCARRIER                 26  40 OCCURS 3
+I             WSSTATUS                  41  55 OCCURS 3
 
-// Main loop
-dow *in03 = *off;
+I*****************************************************************
+I* DFHCOMMAREA
+I*****************************************************************
+I             DFHCOMMAREA    DS
+I                                      1 100
 
-   exfmt EMAILMAP;
+C*****************************************************************
+C* MAIN LOGIC
+C*****************************************************************
+C                   EXSR      LOADEMAIL
+C                   EXSR      SENDMAP
+C                   RETRN
 
-   if *in12;           // PF12 = Refresh
-      callp SendMap();
-      iter;
-   endif;
+C*****************************************************************
+C* LOAD EMAIL STATUS
+C*****************************************************************
+C     LOADEMAIL     BEGSR
+C                   MOVEL     'uwb@axa.com'        WSEMAILFROM(1)
+C                   MOVEL     'RFQ001'             WSRFQID(1)
+C                   MOVEL     'LLOYDS'             WSCARRIER(1)
+C                   MOVEL     'PENDING'            WSSTATUS(1)
+C                   MOVEL     'quotes@zurich'      WSEMAILFROM(2)
+C                   MOVEL     'RFQ002'             WSRFQID(2)
+C                   MOVEL     'ZURICH'             WSCARRIER(2)
+C                   MOVEL     'PENDING'            WSSTATUS(2)
+C                   MOVEL     'uw@allianz'         WSEMAILFROM(3)
+C                   MOVEL     'RFQ003'             WSRFQID(3)
+C                   MOVEL     'ALLIANZ'            WSCARRIER(3)
+C                   MOVEL     'PENDING'            WSSTATUS(3)
+C                   ENDSR
 
-   if *in02;           // PF2 = Extract emails
-      callp ExtractEmails();
-      iter;
-   endif;
+C*****************************************************************
+C* EXTRACT EMAILS (PF2)
+C*****************************************************************
+C     EXTRACT       BEGSR
+C                   CALL      'EMAILEXT'
+C                   PARM                    DFHCOMMAREA
+C                   MOVEL     'EXTRACTED'          WSSTATUS(1)
+C                   MOVEL     'EXTRACTED'          WSSTATUS(2)
+C                   MOVEL     'EXTRACTED'          WSSTATUS(3)
+C                   ADD       3                   WSEXTCNT
+C                   EXSR      SENDMAP
+C                   ENDSR
 
-   if *in04;           // PF4 = Email processing
-      call 'EMAILPROC';
-      callp LoadEmailStatus();
-      callp SendMap();
-      iter;
-   endif;
+C*****************************************************************
+C* SEND MAP
+C*****************************************************************
+C     SENDMAP       BEGSR
+C                   MOVEL     WSEMAILFROM(1)       EMAILFROM1O
+C                   MOVEL     WSRFQID(1)           RFQID1O
+C                   MOVEL     WSCARRIER(1)         CARRIER1O
+C                   MOVEL     WSSTATUS(1)          STATUS1O
+C                   MOVEL     WSEMAILFROM(2)       EMAILFROM2O
+C                   MOVEL     WSRFQID(2)           RFQID2O
+C                   MOVEL     WSCARRIER(2)         CARRIER2O
+C                   MOVEL     WSSTATUS(2)          STATUS2O
+C                   MOVEL     WSEMAILFROM(3)       EMAILFROM3O
+C                   MOVEL     WSRFQID(3)           RFQID3O
+C                   MOVEL     WSCARRIER(3)         CARRIER3O
+C                   MOVEL     WSSTATUS(3)          STATUS3O
+C                   MOVEL     'EMAILS PROCESSED: ' MONSTSO
+C                   CAT       WSEXTCNT             MONSTSO
+C                   CAT       ' QUOTES EXTRACTED AND STORED'
+C                             MONSTSO
+C                   DSPLY     MONSTSO
+C                   ENDSR
 
-   if *in05;           // PF5 = Email analytics
-      call 'EMAILANAL';
-      callp SendMap();
-      iter;
-   endif;
+C*****************************************************************
+C* RETURN TO DASHBOARD (PF3)
+C*****************************************************************
+C     RETDASH       BEGSR
+C                   CALL      'QUOTEDASH'
+C                   PARM                    DFHCOMMAREA
+C                   ENDSR
 
-   if *in03;           // PF3 = Back
-      call 'QUOTEDASH';
-      leave;
-   endif;
+C*****************************************************************
+C* EMAIL PROCESSING (PF4)
+C*****************************************************************
+C     EMAILPROC     BEGSR
+C                   CALL      'EMAILPROC'
+C                   PARM                    DFHCOMMAREA
+C                   EXSR      LOADEMAIL
+C                   EXSR      SENDMAP
+C                   ENDSR
 
-enddo;
-
-*inlr = *on;
-return;
-
-// =======================================
-// Load initial / reset email status
-// =======================================
-dcl-proc LoadEmailStatus;
-
-   EmailEntry(1).EmailFrom = 'uwb@axa.com';
-   EmailEntry(1).RfqId     = 'RFQ001';
-   EmailEntry(1).Carrier   = 'LLOYDS';
-   EmailEntry(1).Status    = 'PENDING';
-
-   EmailEntry(2).EmailFrom = 'quotes@zurich';
-   EmailEntry(2).RfqId     = 'RFQ002';
-   EmailEntry(2).Carrier   = 'ZURICH';
-   EmailEntry(2).Status    = 'PENDING';
-
-   EmailEntry(3).EmailFrom = 'uw@allianz';
-   EmailEntry(3).RfqId     = 'RFQ003';
-   EmailEntry(3).Carrier   = 'ALLIANZ';
-   EmailEntry(3).Status    = 'PENDING';
-
-   ExtractedCount = 0;
-
-end-proc;
-
-// =======================================
-// Extract emails (PF2)
-// =======================================
-dcl-proc ExtractEmails;
-
-   // Equivalent to EXEC CICS LINK EMAILEXT
-   call 'EMAILEXT';
-
-   for i = 1 to 3;
-      EmailEntry(i).Status = 'EXTRACTED';
-   endfor;
-
-   ExtractedCount += 3;
-
-   callp SendMap();
-
-end-proc;
-
-// =======================================
-// Populate screen fields
-// =======================================
-dcl-proc SendMap;
-
-   EMAILFROM1 = EmailEntry(1).EmailFrom;
-   RFQID1     = EmailEntry(1).RfqId;
-   CARRIER1   = EmailEntry(1).Carrier;
-   STATUS1    = EmailEntry(1).Status;
-
-   EMAILFROM2 = EmailEntry(2).EmailFrom;
-   RFQID2     = EmailEntry(2).RfqId;
-   CARRIER2   = EmailEntry(2).Carrier;
-   STATUS2    = EmailEntry(2).Status;
-
-   EMAILFROM3 = EmailEntry(3).EmailFrom;
-   RFQID3     = EmailEntry(3).RfqId;
-   CARRIER3   = EmailEntry(3).Carrier;
-   STATUS3    = EmailEntry(3).Status;
-
-   MONSTS =
-      'EMAILS PROCESSED: ' +
-      %char(ExtractedCount) +
-      ' QUOTES EXTRACTED AND STORED';
-
-end-proc;
+C*****************************************************************
+C* EMAIL ANALYTICS (PF5)
+C*****************************************************************
+C     EMAILANAL     BEGSR
+C                   CALL      'EMAILANAL'
+C                   PARM                    DFHCOMMAREA
+C                   EXSR      SENDMAP
+C                   ENDSR

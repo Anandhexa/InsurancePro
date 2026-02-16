@@ -171,5 +171,3 @@ RFQRec.CreatedDate  = %date();
 write AXARFQ RFQRec;
 
 endsr;
-
-

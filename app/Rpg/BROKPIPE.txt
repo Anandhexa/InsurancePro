@@ -1,0 +1,58 @@
+ 	**FREE
+ctl-opt dftactgrp(*no) actgrp(*caller);
+
+dcl-f PIPESCR   workstn;
+dcl-f AXAPLCMT  usage(*input) keyed;
+
+dcl-s PlacementCount packed(3:0) inz(0);
+dcl-s Broker          char(10) inz('RGARCIA');
+
+// =======================
+// Main
+// =======================
+
+dou *in03;   // loop until PF3 = Exit
+
+   exsr ReadPlacements;
+
+   if PlacementCount = 0;
+      NODATA = 'NO PLACEMENTS FOUND';
+   else;
+      clear NODATA;
+      // Here you would populate output fields
+      // (not shown in original COBOL either)
+   endif;
+
+   exfmt PIPEMAP;
+
+   select;
+      when *in02;   // PF2 New Placement
+         call 'NEWPLCMT';
+
+      when *in12;   // PF12 Refresh
+         iter;
+
+      when *in03;   // PF3 Exit
+         leave;
+   endsl;
+
+enddo;
+
+*inlr = *on;
+return;
+
+
+// =======================
+// ReadPlacements
+// =======================
+begsr ReadPlacements;
+
+   PlacementCount = 0;
+
+   chain Broker AXAPLCMT;
+
+   if %found(AXAPLCMT);
+      PlacementCount += 1;
+   endif;
+
+endsr;

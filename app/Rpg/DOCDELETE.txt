@@ -1,0 +1,143 @@
+**FREE
+ctl-opt dftactgrp(*no) actgrp(*caller);
+
+dcl-f DOCDELETE workstn;
+dcl-f AXASUBM usage(*input) keyed;
+dcl-f AXADOC  usage(*update) keyed;
+
+dcl-s SubmissionKey char(10);
+dcl-s DeleteCount packed(2:0) inz(0);
+dcl-s SuccessCount packed(2:0) inz(0);
+dcl-s HttpStatus int(10);
+dcl-s JsonPayload varchar(1000);
+dcl-s ApiResponse varchar(500);
+
+dcl-ds Document qualified dim(3);
+   DocId        char(10);
+   DocName      char(50);
+   DocType      char(20);
+   DocStatus    char(15);
+   DocDate      char(10);
+   DocSize      char(8);
+   Selected     char(1);
+end-ds;
+
+dcl-pi *n;
+   pSubmissionKey char(10);
+end-pi;
+
+SubmissionKey = pSubmissionKey;
+
+// ------------------------------
+// Load Submission Data
+// ------------------------------
+chain SubmissionKey AXASUBM;
+
+// ------------------------------
+// Load Existing Documents
+// ------------------------------
+Document(1).DocId = 'DOC100001';
+Document(1).DocName = 'Policy_Document.pdf';
+Document(1).DocType = 'POLICY';
+Document(1).DocStatus = 'UPLOADED';
+Document(1).DocDate = '2024-01-15';
+Document(1).DocSize = '2.5MB';
+
+Document(2).DocId = 'DOC100002';
+Document(2).DocName = 'Quote_Response.pdf';
+Document(2).DocType = 'QUOTE';
+Document(2).DocStatus = 'UPLOADED';
+Document(2).DocDate = '2024-01-14';
+Document(2).DocSize = '1.8MB';
+
+Document(3).DocId = 'DOC100003';
+Document(3).DocName = 'Binding_Authority.pdf';
+Document(3).DocType = 'BINDER';
+Document(3).DocStatus = 'UPLOADED';
+Document(3).DocDate = '2024-01-13';
+Document(3).DocSize = '1.2MB';
+
+// ------------------------------
+// Main Loop
+// ------------------------------
+dow *in03 = *off;   // PF3 Exit
+
+   exfmt DELMAP;
+
+   if *in03;
+      leave;
+   endif;
+
+   if *in12;  // Refresh
+      iter;
+   endif;
+
+   DeleteCount = 0;
+   SuccessCount = 0;
+
+   if DEL1 = 'X';
+      processDelete(1);
+   endif;
+
+   if DEL2 = 'X';
+      processDelete(2);
+   endif;
+
+   if DEL3 = 'X';
+      processDelete(3);
+   endif;
+
+   DELSTS = 'DOCUMENTS SELECTED: ' + %char(DeleteCount) +
+            ' SUCCESSFULLY DELETED: ' + %char(SuccessCount);
+
+enddo;
+
+*inlr = *on;
+return;
+
+
+// =============================
+// Subprocedure: processDelete
+// =============================
+dcl-proc processDelete;
+   dcl-pi *n;
+      idx int(10);
+   end-pi;
+
+   DeleteCount += 1;
+
+   // Build JSON
+   JsonPayload = '{' +
+      '"documentId":"' + %trim(Document(idx).DocId) + '",' +
+      '"submissionId":"' + %trim(SubmissionKey) + '",' +
+      '"documentName":"' + %trim(Document(idx).DocName) + '",' +
+      '"documentType":"' + %trim(Document(idx).DocType) + '",' +
+      '"deleteReason":"BROKER_REQUEST",' +
+      '"deletedBy":"ROSALIA GARCIA"' +
+      '}';
+
+   // Call HTTP API using QSYS2
+   exec sql
+      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
+      into :HttpStatus, :ApiResponse
+      from table(
+         QSYS2.HTTP_DELETE(
+            URL => 'https://docmgmt.axainsurance.com/api/v1/delete',
+            DATA => :JsonPayload,
+            HEADERS => 'Content-Type,application/json'
+         )
+      );
+
+   if HttpStatus = 200 or HttpStatus = 204;
+      Document(idx).DocStatus = 'DELETED';
+      SuccessCount += 1;
+
+      chain Document(idx).DocId AXADOC;
+      if %found;
+         delete AXADOC;
+      endif;
+   else;
+      Document(idx).DocStatus = 'DELETE FAILED';
+   endif;
+
+end-proc;

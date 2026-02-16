@@ -1,0 +1,94 @@
+**FREE
+ctl-opt dftactgrp(*no) actgrp(*caller);
+
+dcl-f DOCGEN     workstn;
+dcl-f DOCGENPRT  printer;
+dcl-f AXASUBM    usage(*input) keyed;
+dcl-f AXAPROD    usage(*input) keyed;
+dcl-f AXAPLCMT   usage(*input) keyed;
+
+dcl-s SubmissionKey char(10);
+dcl-s BrokerEmail char(30) inz('RGARCIA@AXAINSURANCE.COM');
+
+dcl-pi *n;
+   pSubmissionKey char(10);
+end-pi;
+
+SubmissionKey = pSubmissionKey;
+
+// ---------------------------------
+// Read Submission
+// ---------------------------------
+chain SubmissionKey AXASUBM;
+if not %found;
+   *inlr = *on;
+   return;
+endif;
+
+// PRODUCT-ID comes from submission record
+chain PRODUCT_ID AXAPROD;
+
+// PLACEMENT-ID comes from submission record
+chain PLACEMENT_ID AXAPLCMT;
+
+
+// ---------------------------------
+// Load screen fields
+// ---------------------------------
+INSNAME  = PLACEMENT_NAME;
+BRKEMAIL = BrokerEmail;
+PRODNM   = PRODUCT_NAME;
+BIZTYPE  = 'NEW BUSINESS';
+INCEPDT  = SUBMISSION_DATE;
+EXPIRDT  = VALID_UNTIL_DATE;
+PROGLMT  = COVERAGE_LIMIT;
+
+
+// ---------------------------------
+// Main Screen Loop
+// ---------------------------------
+dow '1' = '1';
+
+   exfmt DOCMAP;
+
+   if *in03;   // PF3 = Back
+      callp ReturnSubmission();
+      leave;
+   endif;
+
+   if *in12;   // PF12 = Print
+      callp PrintDocument();
+   endif;
+
+enddo;
+
+*inlr = *on;
+return;
+
+
+// =================================
+// Print Routine
+// =================================
+dcl-proc PrintDocument;
+
+   PINSNAME  = INSNAME;
+   PBRKEMAIL = BRKEMAIL;
+   PPRODNM   = PRODNM;
+   PBIZTYPE  = BIZTYPE;
+   PINCEPDT  = INCEPDT;
+   PEXPIRDT  = EXPIRDT;
+   PPROGLMT  = PROGLMT;
+
+   write PRINTREC;
+
+end-proc;
+
+
+// =================================
+// Return to Submission Program
+// =================================
+dcl-proc ReturnSubmission;
+
+   call 'SUBMISSN' (SubmissionKey);
+
+end-proc;

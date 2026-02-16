@@ -1,0 +1,172 @@
+**FREE
+ctl-opt dftactgrp(*no) actgrp(*caller);
+
+// ==========================
+// Files
+// ==========================
+dcl-f DOCMETA  workstn;
+dcl-f AXASUBM  usage(*input) keyed;
+dcl-f AXADOC   usage(*update) keyed;
+
+// ==========================
+// Variables
+// ==========================
+dcl-s SubmissionKey char(10);
+dcl-s DocCounter packed(6:0) inz(200001);
+dcl-s UploadCount packed(2:0) inz(0);
+dcl-s HttpStatus int(10);
+dcl-s JsonPayload varchar(1500);
+dcl-s ApiResponse varchar(500);
+
+// ==========================
+// Document record (COPY DOCUMENT)
+// ==========================
+dcl-ds Document qualified;
+   DocumentId     char(12);
+   ClientId       char(10);
+   SubmissionId   char(10);
+   DocumentType   char(20);
+   DocumentName   char(50);
+   FilePath       char(60);
+   FileSize       packed(9:0);
+   UploadDate     char(8);
+   UploadedBy     char(30);
+   DocumentStatus char(15);
+   MimeType       char(30);
+   ClientName     char(30);
+   PolicyYear     char(15);
+   CarrierName    char(30);
+   DateReceived   char(10);
+   MetadataTags   char(200);
+end-ds;
+
+// ==========================
+// Parameter (COMMAREA replacement)
+// ==========================
+dcl-pi *n;
+   pSubmissionKey char(10);
+end-pi;
+
+SubmissionKey = pSubmissionKey;
+
+// ==========================
+// Read Submission
+// ==========================
+chain SubmissionKey AXASUBM;
+if not %found;
+   *inlr = *on;
+   return;
+endif;
+
+// ==========================
+// Main Screen Loop
+// ==========================
+dow *in03 = *off;
+
+   exfmt METAMAP;
+
+   if *in03;  // PF3
+      call 'DOCUPLOAD' (SubmissionKey);
+      leave;
+   endif;
+
+   if *in12;  // PF12 = Clear
+      clear METASTS;
+      iter;
+   endif;
+
+   if *in01;  // ENTER = Upload
+      callp UploadWithMetadata();
+   endif;
+
+enddo;
+
+*inlr = *on;
+return;
+
+// =================================================
+// Upload logic (ENTER key)
+// =================================================
+dcl-proc UploadWithMetadata;
+
+   // Build document ID
+   Document.DocumentId = 'DOC' + %char(DocCounter);
+   DocCounter += 1;
+
+   // Populate document structure
+   Document.ClientId       = CLIENT;
+   Document.SubmissionId   = SUBMID;
+   Document.DocumentType   = DOCTYPE;
+   Document.DocumentName   = DOCNAME;
+   Document.FilePath       = FILEPATH;
+   Document.FileSize       = 3500000;
+   Document.UploadDate     = %char(%date():*ISO0);
+   Document.UploadedBy     = 'ROSALIA GARCIA';
+   Document.DocumentStatus = 'UPLOADING';
+   Document.MimeType       = 'application/pdf';
+   Document.ClientName     = CLIENT;
+   Document.PolicyYear     = POLIYEAR;
+   Document.CarrierName    = CARRIER;
+   Document.DateReceived   = DATERECV;
+
+   Document.MetadataTags =
+      %trim(Document.DocumentType) + '|' +
+      %trim(Document.ClientName) + '|' +
+      %trim(Document.PolicyYear) + '|' +
+      %trim(Document.CarrierName) + '|' +
+      %trim(Document.DateReceived);
+
+   // --------------------------
+   // Build JSON
+   // --------------------------
+   JsonPayload =
+   '{' +
+   '"documentId":"'   + %trim(Document.DocumentId) + '",' +
+   '"clientId":"'     + %trim(Document.ClientId) + '",' +
+   '"submissionId":"' + %trim(Document.SubmissionId) + '",' +
+   '"documentType":"' + %trim(Document.DocumentType) + '",' +
+   '"documentName":"' + %trim(Document.DocumentName) + '",' +
+   '"filePath":"'     + %trim(Document.FilePath) + '",' +
+   '"fileSize":'      + %char(Document.FileSize) + ',' +
+   '"uploadedBy":"'   + %trim(Document.UploadedBy) + '",' +
+   '"mimeType":"'     + %trim(Document.MimeType) + '",' +
+   '"metadata":{' +
+      '"clientName":"'  + %trim(Document.ClientName) + '",' +
+      '"policyYear":"'  + %trim(Document.PolicyYear) + '",' +
+      '"carrierName":"' + %trim(Document.CarrierName) + '",' +
+      '"dateReceived":"' + %trim(Document.DateReceived) + '",' +
+      '"tags":"'        + %trim(Document.MetadataTags) + '"' +
+   '}}';
+
+   // --------------------------
+   // HTTP POST
+   // --------------------------
+   exec sql
+      select HTTP_STATUS_CODE, RESPONSE_MESSAGE
+        into :HttpStatus, :ApiResponse
+        from table(
+           QSYS2.HTTP_POST(
+              URL => 'https://docmgmt.axainsurance.com/api/v1/upload-metadata',
+              DATA => :JsonPayload,
+              HEADERS => 'Content-Type,application/json'
+           )
+        );
+
+   if HttpStatus = 200 or HttpStatus = 201;
+      Document.DocumentStatus = 'UPLOADED';
+      UploadCount += 1;
+   else;
+      Document.DocumentStatus = 'FAILED';
+   endif;
+
+   // --------------------------
+   // Save metadata locally
+   // --------------------------
+   write AXADOC Document;
+
+   METASTS =
+      'METADATA UPLOAD STATUS: ' +
+      %trim(Document.DocumentStatus) +
+      ' COUNT: ' + %char(UploadCount);
+
+end-proc;

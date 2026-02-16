@@ -1,109 +1,108 @@
 **FREE
-ctl-opt dftactgrp(*no) actgrp(*new);
+ctl-opt dftactgrp(*no)
+        actgrp(*caller)
+        option(*srcstmt:*nodebugio);
 
-/* Files */
+/*----------------------------------------------------------------*/
+/* Files                                                          */
+/*----------------------------------------------------------------*/
+dcl-f AXAPROD usage(*input) keyed;
+dcl-f AXASUBM usage(*input) keyed;
 dcl-f PRODDETDSPF workstn;
-dcl-f AXAPROD  keyed;
-dcl-f AXASUBM  keyed;
 
-/* COMMAREA equivalent */
+/*----------------------------------------------------------------*/
+/* Copy books (COBOL COPY PRODUCT / SUBMISSN)                      */
+/*----------------------------------------------------------------*/
+ /copy PRODUCT
+ /copy SUBMISSN
+
+/*----------------------------------------------------------------*/
+/* Entry parameter (DFHCOMMAREA)                                   */
+/*----------------------------------------------------------------*/
 dcl-pi *n;
-   pCommArea char(100) options(*varsize);
+   pCommArea char(100);
 end-pi;
 
-/* Variables */
+/*----------------------------------------------------------------*/
+/* Working storage                                                */
+/*----------------------------------------------------------------*/
 dcl-s wsProductKey char(10);
 dcl-s wsSubmCount  packed(3:0) inz(0);
-dcl-s exitProgram  ind inz(*off);
 
-/* ===================== */
-/* Main Logic            */
-/* ===================== */
-
+/*----------------------------------------------------------------*/
+/* Main logic                                                      */
+/*----------------------------------------------------------------*/
 wsProductKey = %subst(pCommArea:1:10);
 
-exsr ReadProduct;
-exsr ReadSubmissions;
+readProduct();
+readSubmissions();
+sendMap();
 
-dow not exitProgram;
-
-   exsr SendScreen;
-   exfmt PRODR;
-
-   select;
-      when *in02;  // PF2 New Submission
-         pCommArea = wsProductKey;
-         *inlr = *on;
-         call 'SUBMISSN' pCommArea;
-
-      when *in05;  // PF5 Generate Document
-         pCommArea = SUBMISSIONID;
-         *inlr = *on;
-         call 'DOCGEN' pCommArea;
-
-      when *in03;  // PF3 Exit
-         exitProgram = *on;
-
-      when *in12;  // Refresh
-         exsr ReadSubmissions;
-
-   endsl;
-
-enddo;
-
-*inlr = *on;
 return;
 
-/* ===================== */
-/* Read Product          */
-/* ===================== */
-begsr ReadProduct;
+/*----------------------------------------------------------------*/
+/* Read product                                                   */
+/*----------------------------------------------------------------*/
+dcl-proc readProduct;
 
    chain wsProductKey AXAPROD;
 
-   if %found(AXAPROD);
-      PRODNM = PRODUCTNAME;
-   else;
-      PRODNM = ' ';
+   if not %found(AXAPROD);
+      sendMap();
+      return;
    endif;
 
-endsr;
+end-proc;
 
-/* ===================== */
-/* Read Submissions      */
-/* ===================== */
-begsr ReadSubmissions;
+/*----------------------------------------------------------------*/
+/* Read submissions for product                                   */
+/*----------------------------------------------------------------*/
+dcl-proc readSubmissions;
 
-   wsSubmCount = 0;
-   clear NOSUBM;
+   Product_ID = wsProductKey;
 
-   setll wsProductKey AXASUBM;
-   reade wsProductKey AXASUBM;
+   chain Product_ID AXASUBM;
 
    if %found(AXASUBM);
-
       wsSubmCount += 1;
-
-      SUBMNAME   = PRODUCTNAME;
-      SUBMDATE   = SUBMISSIONDATE;
-      VALIDUNTL  = VALIDUNTIL;
-      BROKERREF  = BROKERREFERENCE;
-
-   else;
-      NOSUBM = 'NO SUBMISSIONS FOUND';
-      clear SUBMNAME;
-      clear SUBMDATE;
-      clear VALIDUNTL;
-      clear BROKERREF;
    endif;
 
-endsr;
+end-proc;
 
-/* ===================== */
-/* Send Screen           */
-/* ===================== */
-begsr SendScreen;
+/*----------------------------------------------------------------*/
+/* PF2 – Create new submission                                    */
+/*----------------------------------------------------------------*/
+dcl-proc newSubmission;
 
-   // Fields already loaded into display buffer
+   pCommArea = wsProductKey + %subst(pCommArea:11);
+   callp SUBMISSN(pCommArea);
 
-endsr;
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF5 – Generate document                                        */
+/*----------------------------------------------------------------*/
+dcl-proc generateDocument;
+
+   pCommArea = Submission_ID + %subst(pCommArea:11);
+   callp DOCGEN(pCommArea);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send display                                                   */
+/*----------------------------------------------------------------*/
+dcl-proc sendMap;
+
+   PRODNMO = Product_Name;
+
+   /* Typically EXFMT PRODMAP2 would occur here */
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF3 – Exit                                                     */
+/*----------------------------------------------------------------*/
+dcl-proc exitProgram;
+   return;
+end-proc;

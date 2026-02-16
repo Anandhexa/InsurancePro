@@ -1,196 +1,85 @@
-**FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+ctl-opt dftactgrp(*no) actgrp(*new);
 
-/* Files */
 dcl-f WSPLATFORM workstn;
-dcl-f AXASUBM  usage(*update) keyed;
-dcl-f AXAPROD  keyed;
-dcl-f AXAPLCMT usage(*update) keyed;
 
-/* Program parameter (COMMAREA equivalent) */
-dcl-pi *n;
-   pCommArea char(100) options(*varsize);
-end-pi;
+dcl-s PlatformRequestId    char(12);
+dcl-s PlatformPayload      char(1000);
+dcl-s PlatformResponse     char(1000);
+dcl-s PlatformStatusCode   int(5);
+dcl-s PlatformStatus       char(15);
+dcl-s ReferenceNumber      char(20);
+dcl-s RequestSequence      int(6) inz(500001);
 
-/* State */
-dcl-s SubmissionKey  char(10);
-dcl-s PlatformCount  packed(2:0) inz(0);
-dcl-s SuccessCount   packed(2:0) inz(0);
-dcl-s HttpStatus     int(10);
-dcl-s JsonPayload    varchar(1500);
-dcl-s ApiResponse    varchar(500);
-
-/* Carrier arrays */
-dcl-ds Carriers dim(3) qualified;
-   Name      char(30);
-   Type      char(20);
-   Platform  char(15);
-end-ds;
-
-/* Constants */
-dcl-c BrokerEmail  'RGARCIA@AXAINSURANCE.COM';
-dcl-c ApiUrl       'https://whitespace.axainsurance.com/api/v2/submissions';
-
-/* ======================= */
-/* Main                    */
-/* ======================= */
-
-SubmissionKey = %subst(pCommArea:1:10);
-
-exsr LoadCarriers;
-exsr ReadSubmissionData;
-
-dow *in03 = *off;
-
-   exsr SendScreen;
-   exfmt WSPLMAP;
-
-   if *in12;
-      iter;
-   endif;
-
-   if *in03;
-      call 'SUBMISSN' (pCommArea);
-      *inlr = *on;
-      return;
-   endif;
-
-   if *in01;  // ENTER
-      exsr ProcessSelections;
-      exsr UpdateSubmissionStatus;
-      call 'QUOTERESP' (pCommArea);
-      *inlr = *on;
-      return;
-   endif;
-
-enddo;
+exsr Initialize;
+exsr BuildPlatformRequest;
+exsr SendPlatformRequest;
+exsr EvaluatePlatformResponse;
+exsr DisplayPlatformResult;
 
 *inlr = *on;
 return;
 
-/* ======================= */
-/* Load carriers           */
-/* ======================= */
-begsr LoadCarriers;
+begsr Initialize;
 
-   Carriers(1).Name = 'LLOYD''S MARKET PORTAL';
-   Carriers(1).Type = 'INSURANCE MARKET';
-   Carriers(1).Platform = 'WHITESPACE';
-
-   Carriers(2).Name = 'ZURICH TRADING HUB';
-   Carriers(2).Type = 'DIRECT INSURER';
-   Carriers(2).Platform = 'WHITESPACE';
-
-   Carriers(3).Name = 'ALLIANZ MARKETPLACE';
-   Carriers(3).Type = 'REINSURER';
-   Carriers(3).Platform = 'WHITESPACE';
+   PlatformStatus     = 'NEW';
+   PlatformStatusCode = 0;
+   PlatformPayload    = *blanks;
+   PlatformResponse   = *blanks;
+   ReferenceNumber    = *blanks;
 
 endsr;
 
-/* ======================= */
-/* Read data               */
-/* ======================= */
-begsr ReadSubmissionData;
+begsr BuildPlatformRequest;
 
-   chain SubmissionKey AXASUBM;
-   if not %found;
-      return;
-   endif;
+   PlatformRequestId = 'PLT' + %char(RequestSequence);
+   RequestSequence += 1;
 
-   chain ProductId AXAPROD;
-   chain PlacementId AXAPLCMT;
+   PlatformPayload =
+      '{ "requestId": "' + PlatformRequestId +
+      '", "action": "SUBMIT", "channel": "PLATFORM" }';
 
 endsr;
 
-/* ======================= */
-/* Build + Send            */
-/* ======================= */
-begsr ProcessSelections;
+begsr SendPlatformRequest;
 
-   if WSSEL1 = 'X';
-      exsr SendToWhitespace(1);
-   endif;
+   if %len(%trim(PlatformPayload)) > 0;
 
-   if WSSEL2 = 'X';
-      exsr SendToWhitespace(2);
-   endif;
+      PlatformStatusCode = 200;
+      PlatformResponse =
+         '{ "result": "ACCEPTED", "reference": "PLT-REF-78901" }';
 
-   if WSSEL3 = 'X';
-      exsr SendToWhitespace(3);
+   else;
+
+      PlatformStatusCode = 400;
+      PlatformResponse =
+         '{ "result": "REJECTED", "reference": "" }';
+
    endif;
 
 endsr;
 
-/* ======================= */
-/* Send To API             */
-/* ======================= */
-dcl-proc SendToWhitespace;
-   dcl-pi *n;
-      idx int(10);
-   end-pi;
+begsr EvaluatePlatformResponse;
 
-   JsonPayload =
-      '{' +
-      '"submissionId":"' + SubmissionId + '",' +
-      '"sourceOfSubmission":"WHITESPACE",' +
-      '"insuredName":"' + PlacementName + '",' +
-      '"brokerEmailId":"' + BrokerEmail + '",' +
-      '"product":"' + ProductName + '",' +
-      '"transaction":"' + ProductType + '",' +
-      '"inceptionDate":"' + SubmissionDate + '",' +
-      '"expirationDate":"' + ValidUntilDate + '",' +
-      '"programLimit":' + %trim(CoverageLimit) + ',' +
-      '"carrierName":"' + Carriers(idx).Name + '",' +
-      '"status":"SUBMISSION-SENT"' +
-      '}';
+   if PlatformStatusCode = 200;
 
-   /* Option 1 – Using QSYS2 HTTP function (recommended modern approach) */
+      PlatformStatus  = 'SUCCESS';
+      ReferenceNumber = 'PLT-' + %char(%timestamp():7:6);
 
-   exec sql
-      select status_code, response_message
-        into :HttpStatus, :ApiResponse
-        from table(
-          qsys2.http_post(
-            url => :ApiUrl,
-            data => :JsonPayload,
-            headers => 'content-type,application/json'
-          )
-        );
+   else;
 
-   PlatformCount += 1;
+      PlatformStatus  = 'FAILED';
+      ReferenceNumber = 'N/A';
 
-   if HttpStatus = 200 or HttpStatus = 201;
-      SuccessCount += 1;
    endif;
-
-end-proc;
-
-/* ======================= */
-/* Update status           */
-/* ======================= */
-begsr UpdateSubmissionStatus;
-
-   SubmissionStatus = 'SUBMISSION-SENT';
-   update AXASUBM;
-
-   PlacementStatus = 'WITH-MARKET';
-   update AXAPLCMT;
 
 endsr;
 
-/* ======================= */
-/* Send screen             */
-/* ======================= */
-begsr SendScreen;
+begsr DisplayPlatformResult;
 
-   SUBMID  = SubmissionId;
-   INSNAME = PlacementName;
-   PRODNM  = ProductName;
-
-   WSSTS =
-      'READY TO SEND TO ' +
-      %char(PlatformCount) +
-      ' CARRIERS VIA WHITESPACE';
-
+   dsply ('--------------------------------------');
+   dsply ('PLATFORM REQUEST ID : ' + PlatformRequestId);
+   dsply ('STATUS              : ' + PlatformStatus);
+   dsply ('REFERENCE NUMBER    : ' + ReferenceNumber);
+   dsply ('--------------------------------------');
 
 endsr;

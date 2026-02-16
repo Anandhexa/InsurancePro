@@ -1,109 +1,130 @@
 **FREE
-ctl-opt dftactgrp(*no) actgrp(*caller);
+ctl-opt dftactgrp(*no)
+        actgrp(*caller)
+        option(*srcstmt:*nodebugio);
 
-// =================================
-// Files
-// =================================
+/*----------------------------------------------------------------*/
+/* Files                                                          */
+/*----------------------------------------------------------------*/
+dcl-f AXASUBM  usage(*input)  keyed;
+dcl-f AXAGTM   usage(*output) keyed;
 dcl-f NEWGTM    workstn;
-dcl-f AXASUBM  usage(*input) keyed;
-dcl-f AXAGTM   usage(*update) keyed;
 
-// =================================
-// Scalars
-// =================================
-dcl-s SubmissionKey char(10);
-dcl-s RfqId         char(10);
+/*----------------------------------------------------------------*/
+/* Copy books                                                     */
+/*----------------------------------------------------------------*/
+ /copy GTMREQ
+ /copy SUBMISSN
 
-// =================================
-// GTM Request (COPY GTMREQ)
-// =================================
-dcl-ds GtmReq qualified;
-   GtmRfqId        char(10);
-   GtmSubmissionId char(10);
-   GtmDistribution char(15);
-   GtmCarrierName  char(30);
-   GtmCarrierType  char(20);
-   GtmStatus       char(15);
-   GtmCreatedDate  char(8);
-end-ds;
-
-// =================================
-// Parameter (COMMAREA replacement)
-// =================================
+/*----------------------------------------------------------------*/
+/* Program parameter (DFHCOMMAREA equivalent)                      */
+/*----------------------------------------------------------------*/
 dcl-pi *n;
-   pSubmissionKey char(10);
+   pCommArea char(100);
 end-pi;
 
-SubmissionKey = pSubmissionKey;
+/*----------------------------------------------------------------*/
+/* Working storage                                                */
+/*----------------------------------------------------------------*/
+dcl-s wsSubmissionKey char(10);
+dcl-s wsRFQId          char(10);
 
-// =================================
-// Read submission
-// =================================
-chain SubmissionKey AXASUBM;
-if not %found;
-   *inlr = *on;
-   return;
-endif;
+/*----------------------------------------------------------------*/
+/* Main logic                                                      */
+/*----------------------------------------------------------------*/
+wsSubmissionKey = %subst(pCommArea:1:10);
 
-// =================================
-// Generate RFQ ID
-// =================================
-RfqId = 'RFQ' + %subst(%char(%timestamp():*ISO0):9:6);
+readSubmissionData();
+generateRFQId();
+sendMap();
 
-// =================================
-// Initial screen values
-// =================================
-SUBMID   = SUBMISSION_ID;
-RFQID    = RfqId;
-CARRTYPE = 'CARRIER';
-
-// =================================
-// Main loop
-// =================================
-dow *in03 = *off;
-
-   exfmt NEWGTMMP;
-
-   if *in12;                    // PF12 = Clear
-      DISTTYPE = *blanks;
-      CARRNAME = *blanks;
-      iter;
-   endif;
-
-   if *in03;                    // PF3 = Cancel
-      call 'SUBMISSN' (SubmissionKey);
-      leave;
-   endif;
-
-   if *in01;                    // ENTER = Submit
-      callp SubmitGtmRequest();
-      leave;
-   endif;
-
-enddo;
-
-*inlr = *on;
 return;
 
-// =======================================
-// Submit GTM Request
-// =======================================
-dcl-proc SubmitGtmRequest;
+/*----------------------------------------------------------------*/
+/* Read submission data                                           */
+/*----------------------------------------------------------------*/
+dcl-proc readSubmissionData;
 
-   // Build GTM record
-   GtmReq.GtmRfqId        = RfqId;
-   GtmReq.GtmSubmissionId = SUBMISSION_ID;
-   GtmReq.GtmDistribution = DISTTYPE;
-   GtmReq.GtmCarrierName  = CARRNAME;
-   GtmReq.GtmCarrierType  = 'CARRIER';
-   GtmReq.GtmStatus       = 'CREATED';
-   GtmReq.GtmCreatedDate  = %char(%date():*ISO0);
+   chain wsSubmissionKey AXASUBM;
+   // Error handling would map to MONITOR or %ERROR
 
-   // Persist request
-   write AXAGTM GtmReq;
+end-proc;
 
-   // Go to GTM details
-   call 'GTMDETAIL' (SubmissionKey);
+/*----------------------------------------------------------------*/
+/* Generate RFQ ID                                                */
+/*----------------------------------------------------------------*/
+dcl-proc generateRFQId;
 
+   // Equivalent of 'RFQ' + CURRENT-DATE(9:6)
+   wsRFQId = 'RFQ' + %subst(%char(%timestamp()):9:6);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* ENTER – Submit GTM request                                     */
+/*----------------------------------------------------------------*/
+dcl-proc submitGtmRequest;
+
+   // EXFMT NEWGTMMP
+
+   buildGtmRequest();
+   saveGtmRequest();
+   gotoGtmDetails();
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Build GTM request record                                       */
+/*----------------------------------------------------------------*/
+dcl-proc buildGtmRequest;
+
+   Gtm_Rfq_Id         = wsRFQId;
+   Gtm_Submission_Id = Submission_Id;
+   Gtm_Distribution  = DistTypeI;
+   Gtm_Carrier_Name  = CarrNameI;
+   Gtm_Carrier_Type  = 'CARRIER';
+   Gtm_Status        = 'CREATED';
+   Gtm_Created_Date  = %char(%date():*ISO0);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Save GTM request                                               */
+/*----------------------------------------------------------------*/
+dcl-proc saveGtmRequest;
+
+   write AXAGTM;
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Go to GTM details                                              */
+/*----------------------------------------------------------------*/
+dcl-proc gotoGtmDetails;
+
+   %subst(pCommArea:1:10) = Submission_Id;
+   callp GTMDETAIL(pCommArea);
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* Send map                                                       */
+/*----------------------------------------------------------------*/
+dcl-proc sendMap;
+
+   SubmIdO = Submission_Id;
+   RfqIdO  = wsRFQId;
+
+   // EXFMT NEWGTMMP
+
+end-proc;
+
+/*----------------------------------------------------------------*/
+/* PF3 – Return to submission                                     */
+/*----------------------------------------------------------------*/
+dcl-proc returnSubmission;
+
+   %subst(pCommArea:1:10) = Submission_Id;
+   callp SUBMISSN(pCommArea);
 
 end-proc;

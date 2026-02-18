@@ -9,7 +9,7 @@ ctl-opt dftactgrp(*no)
 dcl-f AXAPOLICY usage(*update) keyed;
 dcl-f AXAQUOTE  usage(*input)  keyed;
 dcl-f AXASUBM   usage(*input)  keyed;
-dcl-f POLICYDSPF workstn;
+dcl-f POLICY workstn;
 
 /*----------------------------------------------------------------*/
 /* Copy books (COBOL COPY POLICY / QUOTE / SUBMISSN)               */
@@ -192,3 +192,4 @@ dcl-proc returnDashboard;
    callp QUOTEDASH(pCommArea);
 
 end-proc;
+

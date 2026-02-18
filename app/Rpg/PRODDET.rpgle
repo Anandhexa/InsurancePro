@@ -8,7 +8,7 @@ ctl-opt dftactgrp(*no)
 /*----------------------------------------------------------------*/
 dcl-f AXAPROD usage(*input) keyed;
 dcl-f AXASUBM usage(*input) keyed;
-dcl-f PRODDETDSPF workstn;
+dcl-f PRODDET workstn;
 
 /*----------------------------------------------------------------*/
 /* Copy books (COBOL COPY PRODUCT / SUBMISSN)                      */
@@ -106,3 +106,4 @@ end-proc;
 dcl-proc exitProgram;
    return;
 end-proc;
+

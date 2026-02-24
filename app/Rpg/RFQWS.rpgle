@@ -231,35 +231,6 @@
        end-proc;
 
        // ============================================================
-       // BuildJsonPayload - Construct JSON for API call
-       // ============================================================
-       dcl-proc BuildJsonPayload;
-
-         wsJsonPayload = '{' +
-           '"rfqId":"' + %trim(rfqId) + '",' +
-           '"submissionId":"' + %trim(rfqSubmissionId) + '",' +
-           '"placementId":"' + %trim(rfqPlacementId) + '",' +
-           '"productId":"' + %trim(rfqProductId) + '",' +
-           '"clientName":"' + %trim(rfqClientName) + '",' +
-           '"brokerName":"' + %trim(rfqBrokerName) + '",' +
-           '"carrierName":"' + %trim(rfqCarrierName) + '",' +
-           '"businessType":"' + %trim(rfqBusinessType) + '",' +
-           '"inceptionDate":"' + %trim(rfqInceptionDate) + '",' +
-           '"expiryDate":"' + %trim(rfqExpiryDate) + '",' +
-           '"currencyCode":"' + %trim(rfqCurrencyCode) + '",' +
-           '"limitAmount":' + %char(rfqLimitAmount) + ',' +
-           '"deductibleAmount":' + %char(rfqDeductibleAmount) + ',' +
-           '"premiumEstimate":' + %char(rfqPremiumEstimate) + ',' +
-           '"commissionRate":' + %char(rfqCommissionRate) + ',' +
-           '"rfqStatus":"' + %trim(rfqStatus) + '",' +
-           '"priorityLevel":"' + %trim(rfqPriorityLevel) + '",' +
-           '"submissionDate":"' + %trim(rfqSubmissionDate) + '",' +
-           '"responseDueDate":"' + %trim(rfqResponseDueDate) + '"' +
-           '}';
-
-       end-proc;
-
-       // ============================================================
        // CallUwbRfqApi - Call external HTTP REST API
        // (Equivalent to CICS WEB OPEN/SEND/RECEIVE/CLOSE)
        // Using SQL HTTP functions (DB2 for i)
